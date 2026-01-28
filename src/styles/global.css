@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { 
+    @apply font-sans bg-white text-dark dark:bg-dark dark:text-ice transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  
+  .dark .glass {
+    background: rgba(31, 45, 46, 0.9);
+  }
+
+  .faq-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, padding 0.3s ease;
+  }
+  
+  .faq-content.active {
+    max-height: 200px;
+    padding-bottom: 1.5rem;
+  }
+}

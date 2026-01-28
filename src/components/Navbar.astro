@@ -1,0 +1,91 @@
+---
+import { Leaf, Moon, Sun, Menu, X } from 'lucide-astro';
+---
+
+<nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+        <div class="flex justify-between items-center h-20">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 bg-mint-500 rounded-2xl flex items-center justify-center text-white">
+                    <Leaf class="w-6 h-6" />
+                </div>
+                <span class="text-xl font-extrabold tracking-tight text-dark dark:text-white uppercase">Denta<span class="text-mint-500">Menta</span></span>
+            </div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#hero" class="text-xs font-bold uppercase tracking-widest hover:text-mint-500 transition-colors">Inicio</a>
+                <a href="#servicios" class="text-xs font-bold uppercase tracking-widest hover:text-mint-500 transition-colors">Servicios</a>
+                <a href="#ofertas" class="text-xs font-bold uppercase tracking-widest hover:text-mint-500 transition-colors">Ofertas</a>
+                <a href="#acerca" class="text-xs font-bold uppercase tracking-widest hover:text-mint-500 transition-colors">Nosotros</a>
+                
+                <button id="theme-toggle" class="p-2 rounded-xl hover:bg-mint-50 dark:hover:bg-slate-800 transition-colors" aria-label="Cambiar tema">
+                    <Moon id="moon-icon" class="w-5 h-5 text-soft hidden dark:block" />
+                    <Sun id="sun-icon" class="w-5 h-5 text-soft block dark:hidden" />
+                </button>
+                
+                <a href="#contacto" class="bg-mint-500 text-white px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-accent transition-all shadow-lg shadow-mint-500/20">
+                    Agendar Cita
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden flex items-center space-x-4">
+                <button id="menu-btn" class="p-2 text-dark dark:text-white" aria-label="Abrir menú">
+                    <Menu class="w-7 h-7" />
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 w-full bg-white dark:bg-dark border-b dark:border-slate-800 shadow-xl p-8">
+        <div class="flex flex-col space-y-6 text-dark dark:text-white">
+            <a href="#hero" class="mobile-link text-lg font-bold">Inicio</a>
+            <a href="#servicios" class="mobile-link text-lg font-bold">Servicios</a>
+            <a href="#ofertas" class="mobile-link text-lg font-bold">Ofertas</a>
+            <a href="#acerca" class="mobile-link text-lg font-bold">Nosotros</a>
+            <a href="#contacto" class="bg-mint-500 text-white text-center py-4 rounded-xl font-bold uppercase tracking-widest">Agendar</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+
+    themeToggle?.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+    });
+
+    // Navbar Scroll Effect
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
+        if (nav) {
+            if (window.scrollY > 30) {
+                nav.classList.add('glass', 'shadow-xl');
+                nav.classList.remove('border-transparent');
+            } else {
+                nav.classList.remove('glass', 'shadow-xl');
+                nav.classList.add('border-transparent');
+            }
+        }
+    });
+
+    // Mobile Menu
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    menuBtn?.addEventListener('click', () => {
+        mobileMenu?.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('.mobile-link').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu?.classList.add('hidden');
+        });
+    });
+</script>

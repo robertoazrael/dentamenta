@@ -1,0 +1,52 @@
+---
+import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
+---
+
+<div class="fixed bottom-8 right-8 z-[100] flex flex-col items-end">
+    <div id="chat-window" class="hidden w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-mint-100 overflow-hidden mb-6 transition-all transform scale-95 origin-bottom-right">
+        <div class="bg-mint-500 p-5 text-white flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
+                    <Bot class="w-5 h-5" />
+                </div>
+                <div>
+                    <p class="font-bold text-sm uppercase tracking-widest">MentaBot</p>
+                    <p class="text-[9px] opacity-70">IA Asistente</p>
+                </div>
+            </div>
+            <button id="close-chat" class="hover:rotate-90 transition-transform p-1">
+                <X class="w-5 h-5" />
+            </button>
+        </div>
+        <div class="h-80 p-6 overflow-y-auto bg-ice dark:bg-dark flex flex-col gap-4">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[90%]">
+                <p class="text-xs font-medium text-dark dark:text-white leading-relaxed">¡Hola! Soy MentaBot. ¿Quieres agendar una cita o conocer nuestras promos fresh?</p>
+            </div>
+            <button class="text-left p-3 bg-mint-50 dark:bg-mint-900/30 border border-mint-200 dark:border-mint-800 rounded-xl text-[11px] font-bold text-mint-600 hover:bg-mint-500 hover:text-white transition-all">Agendar Limpieza Fresh</button>
+            <button class="text-left p-3 bg-mint-50 dark:bg-mint-900/30 border border-mint-200 dark:border-mint-800 rounded-xl text-[11px] font-bold text-mint-600 hover:bg-mint-500 hover:text-white transition-all">Ver Promociones</button>
+        </div>
+        <div class="p-4 bg-white dark:bg-slate-800 border-t border-ice dark:border-slate-700 flex gap-2">
+            <input type="text" placeholder="Escribe aquí..." class="flex-1 text-xs bg-ice dark:bg-dark border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-mint-500 dark:text-white">
+            <button class="w-10 h-10 bg-mint-500 text-white rounded-xl flex items-center justify-center hover:bg-accent transition-all"><ArrowUp class="w-4 h-4" /></button>
+        </div>
+    </div>
+    <button id="chat-toggle" class="w-16 h-16 bg-mint-500 text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all animate-bounce-subtle">
+        <MessageCircle class="w-7 h-7" />
+    </button>
+</div>
+
+<script>
+    const chatToggle = document.getElementById('chat-toggle');
+    const chatWindow = document.getElementById('chat-window');
+    const closeChat = document.getElementById('close-chat');
+
+    chatToggle?.addEventListener('click', () => {
+        chatWindow?.classList.toggle('hidden');
+        chatToggle.classList.toggle('animate-bounce-subtle');
+    });
+
+    closeChat?.addEventListener('click', () => {
+        chatWindow?.classList.add('hidden');
+        chatToggle?.classList.add('animate-bounce-subtle');
+    });
+</script>
