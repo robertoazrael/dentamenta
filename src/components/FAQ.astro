@@ -1,0 +1,42 @@
+---
+import { ChevronDown } from 'lucide-astro';
+---
+
+<section class="py-24 bg-white dark:bg-dark">
+    <div class="max-w-3xl mx-auto px-6">
+        <h2 class="text-3xl font-extrabold text-center mb-12 text-dark dark:text-white">Dudas Comunes</h2>
+        <div class="space-y-4">
+            <div class="border border-ice dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 overflow-hidden">
+                <button class="faq-btn w-full p-6 text-left flex justify-between items-center outline-none group">
+                    <span class="font-bold text-dark dark:text-white group-hover:text-mint-500 transition-colors">¿Aceptan seguros médicos?</span>
+                    <ChevronDown class="faq-icon transition-transform duration-300 dark:text-white" />
+                </button>
+                <div class="faq-content px-6 text-soft dark:text-mint-100/50">
+                    Sí, trabajamos con las principales aseguradoras y prepagas. También ofrecemos planes de financiación directa.
+                </div>
+            </div>
+            <div class="border border-ice dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 overflow-hidden">
+                <button class="faq-btn w-full p-6 text-left flex justify-between items-center outline-none group">
+                    <span class="font-bold text-dark dark:text-white group-hover:text-mint-500 transition-colors">¿Duele el blanqueamiento dental?</span>
+                    <ChevronDown class="faq-icon transition-transform duration-300 dark:text-white" />
+                </button>
+                <div class="faq-content px-6 text-soft dark:text-mint-100/50">
+                    Nuestras técnicas láser con geles desensibilizantes aseguran una experiencia libre de dolor en el 99% de los casos.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.querySelectorAll('.faq-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const content = btn.nextElementSibling;
+            const icon = btn.querySelector('.faq-icon');
+            if (content instanceof HTMLElement && icon instanceof HTMLElement) {
+                content.classList.toggle('active');
+                icon.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        });
+    });
+</script>

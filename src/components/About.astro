@@ -1,0 +1,35 @@
+---
+import { CheckCircle2 } from 'lucide-astro';
+---
+
+<section id="acerca" class="py-24 overflow-hidden bg-ice dark:bg-dark/50">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+            <div class="relative order-2 lg:order-1">
+                <div class="grid grid-cols-2 gap-4">
+                    <img src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=400" alt="Médico Menta" class="rounded-3xl mt-12 shadow-lg">
+                    <img src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=400" alt="Clínica Menta" class="rounded-3xl shadow-lg">
+                </div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-mint-500 rounded-full flex items-center justify-center text-white font-bold border-8 border-white dark:border-dark shadow-xl">
+                    15+ Años
+                </div>
+            </div>
+            <div class="space-y-6 order-1 lg:order-2">
+                <h2 class="text-4xl font-extrabold leading-tight text-dark dark:text-white">Filosofía Menta: <br>Cuidado Humano, Resultados Reales.</h2>
+                <p class="text-soft dark:text-mint-100/60 leading-relaxed">
+                    En DentaMenta creemos que la tecnología debe estar al servicio del bienestar. Hemos diseñado una clínica donde el ruido y la ansiedad desaparecen, dejando espacio para la calma y la frescura.
+                </p>
+                <ul class="space-y-4">
+                    <li class="flex items-center gap-3 text-dark dark:text-white">
+                        <CheckCircle2 class="text-mint-500 w-5 h-5" />
+                        <span>Diagnóstico Digital 3D sin radiación innecesaria.</span>
+                    </li>
+                    <li class="flex items-center gap-3 text-dark dark:text-white">
+                        <CheckCircle2 class="text-mint-500 w-5 h-5" />
+                        <span>Ambiente libre de olores químicos agresivos.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
