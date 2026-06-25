@@ -6,9 +6,9 @@ El navegador no debe hablar directamente con Supabase ni con webhooks sensibles 
 
 El frontend debe llamar endpoints internos del sitio, por ejemplo:
 
-- `/api/demo/session`
-- `/api/demo/message`
-- `/api/demo/panel-access`
+- `/api/mentedenta/session`
+- `/api/mentedenta/message`
+- `/api/panel-access`
 
 Los endpoints server-side son responsables de hablar con Supabase y n8n.
 
@@ -39,29 +39,29 @@ Uso:
 
 Nunca debe exponerse al navegador.
 
-### `DENTAMENTA_DEMO_WEBHOOK_URL`
+### `MENTEDENTA_WEBHOOK_URL`
 
 Webhook de n8n para enviar mensajes del chatbot Dentamenta.
 
 Uso:
 
-- llamado desde `/api/demo/message`.
+- llamado desde `/api/mentedenta/message`.
 
 No debe llevar prefijo `PUBLIC_`.
 
-### `DENTAMENTA_DEMO_PANEL_BASE_URL`
+### `MENTEDENTA_PANEL_BASE_URL`
 
 URL base del panel demo.
 
 Valor esperado:
 
-`https://dentamenta.mentematica.com/demo/panel`
+`https://dentamenta.mentematica.com/panel`
 
 Uso:
 
 - construir links de acceso al panel demo.
 
-### `DENTAMENTA_DEMO_TOKEN_PEPPER`
+### `MENTEDENTA_TOKEN_PEPPER`
 
 Secreto privado usado para hashear tokens de acceso al panel demo.
 

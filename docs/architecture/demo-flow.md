@@ -5,8 +5,8 @@
 1. El prospecto entra a `dentamenta.mentematica.com`.
 2. Ve una experiencia simulada de clínica dental.
 3. Inicia conversación como paciente.
-4. El sistema crea o reutiliza una `demo_session`.
-5. Cada mensaje se guarda asociado a `demo_session_id`.
+4. El sistema crea o reutiliza una sesión MenteDenta.
+5. Cada mensaje se guarda asociado a `session_id`.
 6. Al terminar, el prospecto recibe acceso al panel demo.
 7. El panel demo se abre con token.
 8. El panel muestra únicamente mensajes de esa sesión.

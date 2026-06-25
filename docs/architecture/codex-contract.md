@@ -42,11 +42,11 @@ Antes de programar, Codex debe leer:
 - `docs/architecture/integrations.md`
 - `docs/architecture/environment.md`
 - `docs/architecture/demo-flow.md`
-- `docs/sql/001_dentamenta_demo_schema.sql`
+- `docs/sql/001_mentedenta_schema.sql`
 
 ## Reglas de seguridad
 
-- El panel demo nunca debe mostrar mensajes sin filtrar por `demo_session_id`.
+- El panel demo nunca debe mostrar mensajes sin filtrar por `session_id`.
 - El token de acceso al panel demo nunca debe guardar secretos en texto plano.
 - El token público debe ser de uso limitado.
 - Las operaciones sensibles deben pasar por endpoints server-side cuando sea necesario.

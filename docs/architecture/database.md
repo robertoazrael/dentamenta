@@ -1,16 +1,32 @@
-# Demo Dentamenta — Base de datos
+# MenteDenta — Base de datos
+
+## Decisión de nomenclatura
+
+Aunque Dentamenta funciona como consultorio ficticio para demostraciones comerciales, estas tablas son productivas para Mentemática y forman la semilla de un CRM futuro.
+
+Por eso no se usa el prefijo `demo_`.
+
+El prefijo oficial de tablas es:
+
+`mentedenta_`
+
+La relación principal entre mensajes, eventos, tokens y sesiones se llama:
+
+`session_id`
+
+No usar `demo_session_id`.
 
 ## Archivo SQL fuente
 
 La definición ejecutable vive en:
 
-`docs/sql/001_dentamenta_demo_schema.sql`
+`docs/sql/001_mentedenta_schema.sql`
 
 Ese archivo es la fuente de verdad para Supabase.
 
 ## Tablas
 
-### `demo_sessions`
+### `mentedenta_sessions`
 
 Representa una experiencia demo individual.
 
@@ -18,13 +34,13 @@ Cada prospecto que conversa con el chatbot debe tener una sesión.
 
 Campo principal:
 
-- `id`: este valor es el `demo_session_id`.
+- `id`: este valor es el `session_id`.
 
 Regla:
 
 Todo mensaje y todo acceso al panel demo deben estar asociados a una sesión.
 
-### `demo_access_tokens`
+### `mentedenta_access_tokens`
 
 Guarda tokens de acceso al panel demo.
 
@@ -36,15 +52,15 @@ Sólo se guarda `token_hash`.
 
 El token plano sólo se entrega una vez al usuario como parte del link:
 
-`/demo/panel?token=...`
+`/panel?token=...`
 
-### `demo_messages`
+### `mentedenta_messages`
 
 Guarda mensajes del chatbot.
 
 Regla crítica:
 
-Todo mensaje debe tener `demo_session_id`.
+Todo mensaje debe tener `session_id`.
 
 Roles válidos:
 
@@ -53,13 +69,13 @@ Roles válidos:
 - `system`
 - `tool`
 
-### `demo_events`
+### `mentedenta_events`
 
 Guarda eventos de uso del demo.
 
 Ejemplos:
 
-- `demo_session_created`
+- `mentedenta_session_created`
 - `chat_opened`
 - `chat_message_sent`
 - `chat_message_received`
@@ -70,7 +86,7 @@ Ejemplos:
 
 ## Trigger de actualización
 
-La tabla `demo_sessions` tiene columna `updated_at`.
+La tabla `mentedenta_sessions` tiene columna `updated_at`.
 
 El archivo SQL crea la función:
 
@@ -78,7 +94,7 @@ El archivo SQL crea la función:
 
 y el trigger:
 
-`trg_demo_sessions_updated_at`
+`trg_mentedenta_sessions_updated_at`
 
 para actualizar `updated_at` automáticamente en cada cambio de la sesión.
 
@@ -94,7 +110,7 @@ El acceso debe ocurrir desde endpoints server-side usando `SUPABASE_SERVICE_ROLE
 
 Codex no debe:
 
-- consultar mensajes sin filtrar por `demo_session_id`;
+- consultar mensajes sin filtrar por `session_id`;
 - leer tokens planos;
 - guardar tokens planos;
 - crear políticas públicas amplias;

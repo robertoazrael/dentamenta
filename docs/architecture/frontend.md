@@ -25,4 +25,4 @@ Se pueden reutilizar ideas de:
 - descarga CSV;
 - botón de reporte.
 
-No debe copiarse la lógica actual de mensajes sin adaptarla a `demo_session_id`.
+No debe copiarse la lógica actual de mensajes sin adaptarla a `session_id`.

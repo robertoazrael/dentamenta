@@ -26,9 +26,9 @@ El usuario podrá:
 
 ## Principio principal
 
-Todo mensaje del chatbot debe quedar asociado a un `demo_session_id`.
+Todo mensaje del chatbot debe quedar asociado a un `session_id`.
 
-Todo panel demo debe filtrar por `demo_session_id`.
+Todo panel demo debe filtrar por `session_id`.
 
 Nadie debe ver mensajes de otra sesión.
 

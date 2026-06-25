@@ -15,4 +15,4 @@ Supabase será la fuente de verdad para:
 
 ## Regla
 
-n8n debe registrar o devolver suficiente información para asociar cada mensaje con `demo_session_id`.
+n8n debe registrar o devolver suficiente información para asociar cada mensaje con `session_id`.
