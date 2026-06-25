@@ -4,7 +4,7 @@
 
 Aunque Dentamenta funciona como consultorio ficticio para demostraciones comerciales, estas tablas son productivas para Mentemática y forman la semilla de un CRM futuro.
 
-Por eso no se usa el prefijo `demo_`.
+Por eso no se usa un prefijo temporal o descartable.
 
 El prefijo oficial de tablas es:
 
@@ -14,7 +14,7 @@ La relación principal entre mensajes, eventos, tokens y sesiones se llama:
 
 `session_id`
 
-No usar `demo_session_id`.
+No usar nombres de sesión temporales o ambiguos.
 
 ## Archivo SQL fuente
 
