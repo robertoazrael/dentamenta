@@ -1,8 +1,10 @@
-# Contrato de trabajo para Codex — Demo Dentamenta
+# Contrato de trabajo para Codex — MenteDenta / Dentamenta
 
 ## Objetivo
 
-Implementar el demo comercial Dentamenta dentro del repo `mentematica.com` usando únicamente la arquitectura definida en `docs/architecture/`.
+Implementar la experiencia comercial Dentamenta dentro del repo dentamenta usando únicamente la arquitectura definida en docs/architecture.
+
+Dentamenta funciona como consultorio ficticio para demostraciones comerciales, pero las tablas MenteDenta son infraestructura productiva de Mentemática y semilla del CRM futuro.
 
 ## Prohibido
 
@@ -26,35 +28,38 @@ Codex puede:
 - crear componentes Astro;
 - crear páginas Astro;
 - reutilizar estilos Tailwind existentes;
-- extraer partes reutilizables del panel actual;
 - crear helpers TypeScript;
 - consumir variables de ambiente ya documentadas;
 - consumir webhooks ya documentados;
-- leer y escribir en tablas Supabase ya documentadas.
+- leer y escribir en tablas Supabase ya documentadas mediante endpoints server-side.
 
 ## Archivos de referencia obligatorios
 
 Antes de programar, Codex debe leer:
 
-- `docs/architecture/overview.md`
-- `docs/architecture/database.md`
-- `docs/architecture/frontend.md`
-- `docs/architecture/integrations.md`
-- `docs/architecture/environment.md`
-- `docs/architecture/demo-flow.md`
-- `docs/sql/001_mentedenta_schema.sql`
+- docs/architecture/overview.md
+- docs/architecture/database.md
+- docs/architecture/frontend.md
+- docs/architecture/integrations.md
+- docs/architecture/environment.md
+- docs/architecture/demo-flow.md
+- docs/architecture/endpoints.md
+- docs/sql/001_mentedenta_schema.sql
 
 ## Reglas de seguridad
 
-- El panel demo nunca debe mostrar mensajes sin filtrar por `session_id`.
-- El token de acceso al panel demo nunca debe guardar secretos en texto plano.
+- El panel nunca debe mostrar mensajes sin filtrar por session_id.
+- El token de acceso al panel nunca debe guardarse en texto plano.
 - El token público debe ser de uso limitado.
-- Las operaciones sensibles deben pasar por endpoints server-side cuando sea necesario.
+- Las operaciones sensibles deben pasar por endpoints server-side.
 - No exponer service role key al navegador.
-- No usar `PUBLIC_` para secretos.
+- No exponer MENTEDENTA_TOKEN_PEPPER.
+- No usar PUBLIC_ para secretos.
+- No consultar Supabase directamente desde el navegador para datos sensibles del panel.
+- No llamar n8n directamente desde el navegador.
 
 ## Regla de compatibilidad
 
-El panel existente de Mentemática no debe romperse.
+El sitio Dentamenta existente no debe romperse.
 
-El demo Dentamenta debe aislarse en rutas, tablas y configuración propias.
+La implementación MenteDenta debe aislarse en rutas, tablas y configuración propias.
