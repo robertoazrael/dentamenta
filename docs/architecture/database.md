@@ -67,6 +67,21 @@ Ejemplos:
 - `panel_token_invalid`
 - `panel_csv_downloaded`
 
+
+## Trigger de actualización
+
+La tabla `demo_sessions` tiene columna `updated_at`.
+
+El archivo SQL crea la función:
+
+`public.set_updated_at()`
+
+y el trigger:
+
+`trg_demo_sessions_updated_at`
+
+para actualizar `updated_at` automáticamente en cada cambio de la sesión.
+
 ## Seguridad
 
 Las tablas tienen RLS habilitado.
