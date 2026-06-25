@@ -44,6 +44,7 @@ Antes de programar, Codex debe leer:
 - docs/architecture/environment.md
 - docs/architecture/demo-flow.md
 - docs/architecture/endpoints.md
+- docs/architecture/n8n-webhook.md
 - docs/sql/001_mentedenta_schema.sql
 
 ## Reglas de seguridad
