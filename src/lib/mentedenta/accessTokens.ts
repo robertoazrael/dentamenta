@@ -1,7 +1,7 @@
 import { getMenteDentaSupabase } from './supabase';
 import { generatePanelToken, generatePanelUrl, hashPanelToken } from './tokens';
 
-export type MenteDentaAccessTokenPurpose = 'panel_access';
+export type MenteDentaAccessTokenPurpose = 'panel' | 'demo_entry';
 
 export interface MenteDentaAccessToken {
   id: string;
@@ -24,9 +24,15 @@ export interface CreatePanelAccessTokenResult {
   panel_url: string;
 }
 
-export async function createPanelAccessToken(
+export interface CreateDemoEntryAccessTokenResult {
+  accessToken: MenteDentaAccessToken;
+  token: string;
+}
+
+async function createAccessToken(
   sessionId: string,
-): Promise<CreatePanelAccessTokenResult> {
+  purpose: MenteDentaAccessTokenPurpose,
+): Promise<{ accessToken: MenteDentaAccessToken; token: string }> {
   const token = generatePanelToken();
   const tokenHash = hashPanelToken(token);
 
@@ -35,6 +41,7 @@ export async function createPanelAccessToken(
     .insert({
       session_id: sessionId,
       token_hash: tokenHash,
+      purpose,
     })
     .select('*')
     .single();
@@ -46,12 +53,30 @@ export async function createPanelAccessToken(
   return {
     accessToken: data as MenteDentaAccessToken,
     token,
+  };
+}
+
+export async function createPanelAccessToken(
+  sessionId: string,
+): Promise<CreatePanelAccessTokenResult> {
+  const { accessToken, token } = await createAccessToken(sessionId, 'panel');
+
+  return {
+    accessToken,
+    token,
     panel_url: generatePanelUrl(token),
   };
 }
 
+export async function createDemoEntryAccessToken(
+  sessionId: string,
+): Promise<CreateDemoEntryAccessTokenResult> {
+  return createAccessToken(sessionId, 'demo_entry');
+}
+
 export async function getValidAccessTokenByPlainToken(
   token: string,
+  purpose: MenteDentaAccessTokenPurpose,
 ): Promise<MenteDentaAccessToken | null> {
   const tokenHash = hashPanelToken(token);
 
@@ -59,6 +84,7 @@ export async function getValidAccessTokenByPlainToken(
     .from('mentedenta_access_tokens')
     .select('*')
     .eq('token_hash', tokenHash)
+    .eq('purpose', purpose)
     .maybeSingle();
 
   if (error) {

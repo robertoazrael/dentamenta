@@ -25,6 +25,9 @@ export interface CreateMenteDentaSessionInput {
   source: string;
   scenario?: string | null;
   metadata?: Record<string, unknown>;
+  prospect_name?: string | null;
+  prospect_email?: string | null;
+  prospect_phone?: string | null;
 }
 
 export async function createSession(
@@ -37,6 +40,9 @@ export async function createSession(
       scenario: input.scenario ?? null,
       metadata: input.metadata ?? {},
       status: 'active',
+      prospect_name: input.prospect_name ?? null,
+      prospect_email: input.prospect_email ?? null,
+      prospect_phone: input.prospect_phone ?? null,
     })
     .select('*')
     .single();

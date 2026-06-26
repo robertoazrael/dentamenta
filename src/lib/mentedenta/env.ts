@@ -15,6 +15,7 @@ const REQUIRED_ENV_NAMES = [
 ] as const;
 
 let cachedEnv: MenteDentaEnv | undefined;
+let cachedInternalApiKey: string | undefined;
 
 function readRequiredEnv(name: (typeof REQUIRED_ENV_NAMES)[number]): string {
   const value = import.meta.env[name];
@@ -53,4 +54,19 @@ export function getMenteDentaEnv(): MenteDentaEnv {
 
   cachedEnv = env;
   return env;
+}
+
+export function getMenteDentaInternalApiKey(): string {
+  if (cachedInternalApiKey) {
+    return cachedInternalApiKey;
+  }
+
+  const value = import.meta.env.MENTEDENTA_INTERNAL_API_KEY;
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error('Missing required server-side environment variable: MENTEDENTA_INTERNAL_API_KEY');
+  }
+
+  cachedInternalApiKey = value.trim();
+  return cachedInternalApiKey;
 }

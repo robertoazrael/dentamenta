@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   try {
-    const accessToken = await getValidAccessTokenByPlainToken(token);
+    const accessToken = await getValidAccessTokenByPlainToken(token, 'panel');
 
     if (!accessToken) {
       return jsonResponse({

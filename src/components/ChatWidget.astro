@@ -89,6 +89,22 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(chatHistory));
     }
 
+    function clearChatHistory() {
+        chatHistory = [];
+        localStorage.removeItem(HISTORY_STORAGE_KEY);
+
+        if (!chatMessages) {
+            return;
+        }
+
+        const storedMessages = Array.from(chatMessages.children).slice(1);
+        for (const message of storedMessages) {
+            message.remove();
+        }
+
+        hideTypingIndicator();
+    }
+
     function appendMessage(role, content, createdAt = new Date().toISOString()) {
         const message = { role, content, created_at: createdAt };
         chatHistory.push(message);
@@ -203,6 +219,44 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         return sessionId;
     }
 
+    function removeDemoTokenFromUrl() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('demo_token');
+        const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+        window.history.replaceState(window.history.state, '', nextUrl || '/');
+    }
+
+    async function adoptPreparedSessionFromToken() {
+        const demoToken = new URLSearchParams(window.location.search).get('demo_token')?.trim();
+
+        if (!demoToken) {
+            return;
+        }
+
+        try {
+            setStatus('Abriendo sesión preparada…');
+            const data = await postJson('/api/mentedenta/session-from-token', {
+                token: demoToken,
+            });
+            const preparedSessionId = data.session_id;
+
+            if (typeof preparedSessionId !== 'string' || preparedSessionId.trim() === '') {
+                throw new Error('Invalid prepared session response');
+            }
+
+            if (sessionId && sessionId !== preparedSessionId) {
+                clearChatHistory();
+            }
+
+            sessionId = preparedSessionId;
+            localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+            removeDemoTokenFromUrl();
+            setStatus('');
+        } catch {
+            setStatus('No se pudo abrir la sesión preparada; se iniciará una sesión nueva.');
+        }
+    }
+
     async function requestPanelUrl() {
         const currentSessionId = await ensureSession();
 
@@ -218,8 +272,11 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         renderStoredHistory();
 
         try {
+            await adoptPreparedSessionFromToken();
             await ensureSession();
-            setStatus('');
+            if (chatStatus?.textContent !== 'No se pudo abrir la sesión preparada; se iniciará una sesión nueva.') {
+                setStatus('');
+            }
         } catch {
             setStatus('No se pudo preparar el chat. Intenta recargar la página.');
         }
