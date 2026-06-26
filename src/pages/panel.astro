@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Panel MenteDenta | DentaMenta">
-	<main class="min-h-screen bg-[#f4fbf8] text-slate-900">
+	<main class="mentedenta-panel min-h-screen bg-[#f4fbf8] text-slate-900 transition-colors">
 		<div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
 			<header class="overflow-hidden rounded-[2rem] border border-mint-100 bg-white shadow-xl shadow-mint-900/5">
 				<div class="flex flex-col gap-5 bg-gradient-to-br from-mint-500 via-emerald-500 to-cyan-500 p-6 text-white md:flex-row md:items-center md:justify-between">
@@ -29,6 +29,14 @@ import Layout from '../layouts/Layout.astro';
 							class="cursor-not-allowed rounded-2xl border border-white/25 bg-white/10 px-4 py-3 text-xs font-black uppercase tracking-wide text-white/55"
 						>
 							Enviar reporte por email
+						</button>
+						<button
+							type="button"
+							id="panel-theme-toggle"
+							class="rounded-2xl border border-white/40 bg-white/15 px-4 py-3 text-xs font-black uppercase tracking-wide text-white backdrop-blur transition hover:bg-white/25"
+							aria-label="Cambiar tema"
+						>
+							Cambiar tema
 						</button>
 					</div>
 				</div>
@@ -267,6 +275,7 @@ import Layout from '../layouts/Layout.astro';
 		const modalContentEl = document.getElementById('modal-content');
 		const modalCloseEl = document.getElementById('modal-close');
 		const modalCloseSecondaryEl = document.getElementById('modal-close-secondary');
+		const panelThemeToggleEl = document.getElementById('panel-theme-toggle');
 		const roleFilterButtons = Array.from(document.querySelectorAll('.role-filter'));
 
 		let panelMessages = [];
@@ -345,6 +354,25 @@ import Layout from '../layouts/Layout.astro';
 			return `MD-${safeId.slice(-8).toUpperCase()}`;
 		}
 
+		function getFriendlyRole(role) {
+			const labels = {
+				user: 'Visitante',
+				assistant: 'Asistente',
+				system: 'Sistema',
+				tool: 'Herramienta',
+			};
+
+			return labels[role] || role || '—';
+		}
+
+		function getFriendlyChannel(channel) {
+			const labels = {
+				web_chat: 'Web chat',
+			};
+
+			return labels[channel] || channel || '—';
+		}
+
 		function showError(message, kind = 'error') {
 			if (loadingEl) {
 				loadingEl.classList.add('hidden');
@@ -414,7 +442,7 @@ import Layout from '../layouts/Layout.astro';
 
 		function openModal(message) {
 			if (modalRoleEl) {
-				modalRoleEl.textContent = `${message.role || 'Mensaje'} · ${message.channel || 'web_chat'}`;
+				modalRoleEl.textContent = `${getFriendlyRole(message.role)} · ${getFriendlyChannel(message.channel)}`;
 			}
 
 			if (modalDateEl) {
@@ -480,7 +508,7 @@ import Layout from '../layouts/Layout.astro';
 				channelCell.className = 'px-5 py-4 align-top';
 				const channel = document.createElement('span');
 				channel.className = 'inline-flex rounded-full bg-cyan-50 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-700';
-				channel.textContent = message.channel || 'web_chat';
+				channel.textContent = getFriendlyChannel(message.channel);
 				channelCell.append(channel);
 
 				const roleCell = document.createElement('td');
@@ -490,7 +518,7 @@ import Layout from '../layouts/Layout.astro';
 				role.className = isUser
 					? 'inline-flex rounded-full bg-mint-50 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-mint-700'
 					: 'inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-slate-700';
-				role.textContent = isUser ? 'Visitante' : message.role || '—';
+				role.textContent = getFriendlyRole(message.role);
 				roleCell.append(role);
 
 				const contentCell = document.createElement('td');
@@ -760,6 +788,11 @@ import Layout from '../layouts/Layout.astro';
 
 		modalCloseEl?.addEventListener('click', closeModal);
 		modalCloseSecondaryEl?.addEventListener('click', closeModal);
+		panelThemeToggleEl?.addEventListener('click', () => {
+			const html = document.documentElement;
+			html.classList.toggle('dark');
+			localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+		});
 		modalEl?.addEventListener('click', (event) => {
 			if (event.target === modalEl) {
 				closeModal();
@@ -774,4 +807,35 @@ import Layout from '../layouts/Layout.astro';
 
 		loadPanelData();
 	</script>
+
+	<style>
+		:global(.dark) .mentedenta-panel {
+			background: #020617;
+			color: #f8fafc;
+		}
+
+		:global(.dark) .mentedenta-panel :is(.bg-white, .bg-slate-50, .bg-mint-50) {
+			background-color: #0f172a;
+		}
+
+		:global(.dark) .mentedenta-panel :is(.border-mint-100, .border-slate-100, .border-slate-200) {
+			border-color: rgba(148, 163, 184, 0.24);
+		}
+
+		:global(.dark) .mentedenta-panel :is(.text-slate-950, .text-slate-900, .text-slate-800, .text-slate-700) {
+			color: #f8fafc;
+		}
+
+		:global(.dark) .mentedenta-panel :is(.text-slate-600, .text-slate-500, .text-slate-400) {
+			color: #cbd5e1;
+		}
+
+		:global(.dark) .mentedenta-panel thead {
+			background-color: rgba(2, 6, 23, 0.75);
+		}
+
+		:global(.dark) .mentedenta-panel tbody tr:hover {
+			background-color: rgba(16, 185, 129, 0.12);
+		}
+	</style>
 </Layout>
