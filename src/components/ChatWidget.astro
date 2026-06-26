@@ -54,8 +54,9 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
     const chatStatus = document.getElementById('chat-status');
     const panelOpen = document.getElementById('panel-open');
 
+    localStorage.removeItem(PANEL_URL_STORAGE_KEY);
+
     let sessionId = localStorage.getItem(SESSION_STORAGE_KEY) || '';
-    let panelUrl = localStorage.getItem(PANEL_URL_STORAGE_KEY) || '';
     let chatHistory = readStoredHistory();
     let isSending = false;
 
@@ -163,21 +164,15 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         return sessionId;
     }
 
-    async function ensurePanelUrl() {
+    async function requestPanelUrl() {
         const currentSessionId = await ensureSession();
-
-        if (panelUrl) {
-            return panelUrl;
-        }
 
         setStatus('Preparando panel…');
         const data = await postJson('/api/mentedenta/panel-access', {
             session_id: currentSessionId,
         });
 
-        panelUrl = data.panel_url;
-        localStorage.setItem(PANEL_URL_STORAGE_KEY, panelUrl);
-        return panelUrl;
+        return data.panel_url;
     }
 
     async function initializeChat() {
@@ -185,7 +180,6 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
 
         try {
             await ensureSession();
-            await ensurePanelUrl();
             setStatus('');
         } catch {
             setStatus('No se pudo preparar el chat. Intenta recargar la página.');
@@ -254,7 +248,7 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
 
     panelOpen?.addEventListener('click', async () => {
         try {
-            const url = await ensurePanelUrl();
+            const url = await requestPanelUrl();
             window.open(url, '_blank', 'noopener,noreferrer');
             setStatus('');
         } catch {
