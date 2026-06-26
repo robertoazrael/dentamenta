@@ -59,6 +59,7 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
     let sessionId = localStorage.getItem(SESSION_STORAGE_KEY) || '';
     let chatHistory = readStoredHistory();
     let isSending = false;
+    let typingIndicator = null;
 
     function setStatus(message) {
         if (chatStatus) {
@@ -121,6 +122,44 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         wrapper.append(role, text);
         chatMessages.append(wrapper);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        if (!chatMessages || typingIndicator) {
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'self-start bg-white dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[90%]';
+        wrapper.setAttribute('aria-live', 'polite');
+
+        const label = document.createElement('p');
+        label.className = 'mb-2 text-[9px] font-bold uppercase tracking-widest text-mint-600 dark:text-mint-300';
+        label.textContent = 'MentaBot está escribiendo';
+
+        const dots = document.createElement('div');
+        dots.className = 'flex items-center gap-1';
+
+        for (let index = 0; index < 3; index += 1) {
+            const dot = document.createElement('span');
+            dot.className = 'h-2 w-2 rounded-full bg-mint-500 animate-bounce';
+            dot.style.animationDelay = `${index * 120}ms`;
+            dots.append(dot);
+        }
+
+        wrapper.append(label, dots);
+        typingIndicator = wrapper;
+        chatMessages.append(wrapper);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        if (!typingIndicator) {
+            return;
+        }
+
+        typingIndicator.remove();
+        typingIndicator = null;
     }
 
     function renderStoredHistory() {
@@ -228,12 +267,15 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         }
         setStatus('MentaBot está respondiendo…');
         appendMessage('user', message);
+        showTypingIndicator();
 
         try {
             const data = await sendMessage(message);
+            hideTypingIndicator();
             appendMessage('assistant', data.reply || 'No recibí una respuesta en este momento.');
             setStatus('');
         } catch {
+            hideTypingIndicator();
             appendMessage('assistant', 'No pude enviar tu mensaje en este momento. Intenta de nuevo.');
             setStatus('Error al enviar el mensaje.');
         } finally {
