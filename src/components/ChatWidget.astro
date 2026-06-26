@@ -18,16 +18,20 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
                 <X class="w-5 h-5" />
             </button>
         </div>
-        <div class="h-80 p-6 overflow-y-auto bg-ice dark:bg-dark flex flex-col gap-4">
+        <div id="chat-messages" class="h-80 p-6 overflow-y-auto bg-ice dark:bg-dark flex flex-col gap-4">
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[90%]">
                 <p class="text-xs font-medium text-dark dark:text-white leading-relaxed">¡Hola! Soy MentaBot. ¿Quieres agendar una cita o conocer nuestras promos fresh?</p>
             </div>
-            <button class="text-left p-3 bg-mint-50 dark:bg-mint-900/30 border border-mint-200 dark:border-mint-800 rounded-xl text-[11px] font-bold text-mint-600 hover:bg-mint-500 hover:text-white transition-all">Agendar Limpieza Fresh</button>
-            <button class="text-left p-3 bg-mint-50 dark:bg-mint-900/30 border border-mint-200 dark:border-mint-800 rounded-xl text-[11px] font-bold text-mint-600 hover:bg-mint-500 hover:text-white transition-all">Ver Promociones</button>
         </div>
-        <div class="p-4 bg-white dark:bg-slate-800 border-t border-ice dark:border-slate-700 flex gap-2">
-            <input type="text" placeholder="Escribe aquí..." class="flex-1 text-xs bg-ice dark:bg-dark border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-mint-500 dark:text-white">
-            <button class="w-10 h-10 bg-mint-500 text-white rounded-xl flex items-center justify-center hover:bg-accent transition-all"><ArrowUp class="w-4 h-4" /></button>
+        <form id="chat-form" class="p-4 bg-white dark:bg-slate-800 border-t border-ice dark:border-slate-700 flex gap-2">
+            <input id="chat-input" type="text" placeholder="Escribe aquí..." class="flex-1 text-xs bg-ice dark:bg-dark border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-mint-500 dark:text-white">
+            <button id="chat-submit" type="submit" class="w-10 h-10 bg-mint-500 text-white rounded-xl flex items-center justify-center hover:bg-accent transition-all"><ArrowUp class="w-4 h-4" /></button>
+        </form>
+        <div class="p-4 pt-0 bg-white dark:bg-slate-800">
+            <button id="panel-open" type="button" class="w-full rounded-xl border border-mint-600 bg-mint-500 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-mint-500/25 transition-all hover:bg-accent hover:shadow-accent/25 active:scale-[0.98] dark:border-mint-400 dark:bg-mint-500 dark:text-white">
+                Ver panel del consultorio
+            </button>
+            <p id="chat-status" class="mt-2 min-h-4 text-[10px] font-medium text-slate-500 dark:text-slate-400"></p>
         </div>
     </div>
     <button id="chat-toggle" class="w-16 h-16 bg-mint-500 text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all animate-bounce-subtle">
@@ -36,9 +40,162 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
 </div>
 
 <script>
+    const SESSION_STORAGE_KEY = 'mentedenta_session_id';
+    const PANEL_URL_STORAGE_KEY = 'mentedenta_panel_url';
+    const HISTORY_STORAGE_KEY = 'mentedenta_chat_history';
+
     const chatToggle = document.getElementById('chat-toggle');
     const chatWindow = document.getElementById('chat-window');
     const closeChat = document.getElementById('close-chat');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatSubmit = document.getElementById('chat-submit');
+    const chatStatus = document.getElementById('chat-status');
+    const panelOpen = document.getElementById('panel-open');
+
+    localStorage.removeItem(PANEL_URL_STORAGE_KEY);
+
+    let sessionId = localStorage.getItem(SESSION_STORAGE_KEY) || '';
+    let chatHistory = readStoredHistory();
+    let isSending = false;
+
+    function setStatus(message) {
+        if (chatStatus) {
+            chatStatus.textContent = message;
+        }
+    }
+
+    function readStoredHistory() {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+            if (!Array.isArray(parsed)) {
+                return [];
+            }
+
+            return parsed.filter((item) => {
+                return item
+                    && (item.role === 'user' || item.role === 'assistant')
+                    && typeof item.content === 'string'
+                    && typeof item.created_at === 'string';
+            });
+        } catch {
+            return [];
+        }
+    }
+
+    function saveHistory() {
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(chatHistory));
+    }
+
+    function appendMessage(role, content, createdAt = new Date().toISOString()) {
+        const message = { role, content, created_at: createdAt };
+        chatHistory.push(message);
+        saveHistory();
+        renderMessage(message);
+    }
+
+    function renderMessage(message) {
+        if (!chatMessages) {
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        const isUser = message.role === 'user';
+        wrapper.className = isUser
+            ? 'self-end bg-mint-500 text-white p-4 rounded-2xl rounded-tr-none shadow-sm max-w-[90%]'
+            : 'self-start bg-white dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[90%]';
+
+        const role = document.createElement('p');
+        role.className = isUser
+            ? 'mb-1 text-[9px] font-bold uppercase tracking-widest text-white/70'
+            : 'mb-1 text-[9px] font-bold uppercase tracking-widest text-mint-600 dark:text-mint-300';
+        role.textContent = isUser ? 'Tú' : 'MentaBot';
+
+        const text = document.createElement('p');
+        text.className = isUser
+            ? 'text-xs font-medium leading-relaxed text-white'
+            : 'text-xs font-medium text-dark dark:text-white leading-relaxed';
+        text.textContent = message.content;
+
+        wrapper.append(role, text);
+        chatMessages.append(wrapper);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function renderStoredHistory() {
+        for (const message of chatHistory) {
+            renderMessage(message);
+        }
+    }
+
+    async function postJson(url, payload) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                accept: 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok || !data?.ok) {
+            throw new Error(data?.error || 'Request failed');
+        }
+
+        return data;
+    }
+
+    async function ensureSession() {
+        if (sessionId) {
+            return sessionId;
+        }
+
+        setStatus('Creando sesión…');
+        const data = await postJson('/api/mentedenta/session', {
+            source: 'dentamenta_web',
+            scenario: 'patient_demo',
+            metadata: {},
+        });
+
+        sessionId = data.session_id;
+        localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+        return sessionId;
+    }
+
+    async function requestPanelUrl() {
+        const currentSessionId = await ensureSession();
+
+        setStatus('Preparando panel…');
+        const data = await postJson('/api/mentedenta/panel-access', {
+            session_id: currentSessionId,
+        });
+
+        return data.panel_url;
+    }
+
+    async function initializeChat() {
+        renderStoredHistory();
+
+        try {
+            await ensureSession();
+            setStatus('');
+        } catch {
+            setStatus('No se pudo preparar el chat. Intenta recargar la página.');
+        }
+    }
+
+    async function sendMessage(message) {
+        const currentSessionId = await ensureSession();
+
+        return postJson('/api/mentedenta/message', {
+            session_id: currentSessionId,
+            message,
+            scenario: 'patient_demo',
+            metadata: {},
+        });
+    }
 
     chatToggle?.addEventListener('click', () => {
         chatWindow?.classList.toggle('hidden');
@@ -49,4 +206,55 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         chatWindow?.classList.add('hidden');
         chatToggle?.classList.add('animate-bounce-subtle');
     });
+
+    chatForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        if (isSending || !(chatInput instanceof HTMLInputElement)) {
+            return;
+        }
+
+        const message = chatInput.value.trim();
+
+        if (!message) {
+            return;
+        }
+
+        isSending = true;
+        chatInput.value = '';
+        chatInput.disabled = true;
+        if (chatSubmit instanceof HTMLButtonElement) {
+            chatSubmit.disabled = true;
+        }
+        setStatus('MentaBot está respondiendo…');
+        appendMessage('user', message);
+
+        try {
+            const data = await sendMessage(message);
+            appendMessage('assistant', data.reply || 'No recibí una respuesta en este momento.');
+            setStatus('');
+        } catch {
+            appendMessage('assistant', 'No pude enviar tu mensaje en este momento. Intenta de nuevo.');
+            setStatus('Error al enviar el mensaje.');
+        } finally {
+            isSending = false;
+            chatInput.disabled = false;
+            if (chatSubmit instanceof HTMLButtonElement) {
+                chatSubmit.disabled = false;
+            }
+            chatInput.focus();
+        }
+    });
+
+    panelOpen?.addEventListener('click', async () => {
+        try {
+            const url = await requestPanelUrl();
+            window.open(url, '_blank', 'noopener,noreferrer');
+            setStatus('');
+        } catch {
+            setStatus('No se pudo abrir el panel en este momento.');
+        }
+    });
+
+    initializeChat();
 </script>

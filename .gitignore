@@ -1,1 +1,8 @@
 node_modules
+
+# Astro / Netlify generated files
+.astro/
+dist/
+.netlify/
+
+.env.local
