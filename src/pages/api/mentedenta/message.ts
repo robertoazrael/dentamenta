@@ -3,6 +3,7 @@ import type { APIRoute } from 'astro';
 import { recordEvent } from '@/lib/mentedenta/events';
 import { getRecentMessageHistory, saveMessage } from '@/lib/mentedenta/messages';
 import { callMenteDentaWebhook } from '@/lib/mentedenta/n8n';
+import { sanitizeMenteDentaText } from '@/lib/mentedenta/sanitize';
 import { getSessionById, updateSessionLastSeen } from '@/lib/mentedenta/sessions';
 
 const FALLBACK_REPLY = 'En este momento tuve un problema para responder, pero tu mensaje quedó registrado.';
@@ -61,6 +62,7 @@ export const POST: APIRoute = async ({ request }) => {
   const message = body.message.trim();
   const scenario = body.scenario?.trim() || 'patient_demo';
   const metadata = body.metadata ?? {};
+  const sanitizedUserMessage = sanitizeMenteDentaText(message);
 
   try {
     const session = await getSessionById(sessionId);
@@ -70,11 +72,18 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const history = await getRecentMessageHistory(sessionId);
+    const sanitizedHistory = history.map((historyMessage) => ({
+      ...historyMessage,
+      content: sanitizeMenteDentaText(historyMessage.content).content,
+    }));
 
     await saveMessage({
       session_id: sessionId,
       role: 'user',
-      content: message,
+      content: sanitizedUserMessage.content,
+      metadata: {
+        sanitization: sanitizedUserMessage.metadata,
+      },
     });
 
     await recordEvent({
@@ -88,9 +97,9 @@ export const POST: APIRoute = async ({ request }) => {
       const webhookResponse = await callMenteDentaWebhook({
         source: 'dentamenta_web',
         session_id: sessionId,
-        message,
+        message: sanitizedUserMessage.content,
         scenario,
-        history,
+        history: sanitizedHistory,
         metadata,
       });
 
@@ -106,10 +115,15 @@ export const POST: APIRoute = async ({ request }) => {
       reply = FALLBACK_REPLY;
     }
 
+    const sanitizedAssistantReply = sanitizeMenteDentaText(reply);
+
     await saveMessage({
       session_id: sessionId,
       role: 'assistant',
-      content: reply,
+      content: sanitizedAssistantReply.content,
+      metadata: {
+        sanitization: sanitizedAssistantReply.metadata,
+      },
     });
 
     await updateSessionLastSeen(sessionId);
@@ -122,7 +136,7 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({
       ok: true,
       session_id: sessionId,
-      reply,
+      reply: sanitizedAssistantReply.content,
     }, 200);
   } catch (error) {
     console.error('Failed to process MenteDenta message', error);
