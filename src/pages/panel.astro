@@ -1,0 +1,777 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Panel MenteDenta | DentaMenta">
+	<main class="min-h-screen bg-[#f4fbf8] text-slate-900">
+		<div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
+			<header class="overflow-hidden rounded-[2rem] border border-mint-100 bg-white shadow-xl shadow-mint-900/5">
+				<div class="flex flex-col gap-5 bg-gradient-to-br from-mint-500 via-emerald-500 to-cyan-500 p-6 text-white md:flex-row md:items-center md:justify-between">
+					<div>
+						<p class="text-[10px] font-black uppercase tracking-[0.32em] text-white/75">DentaMenta · MenteDenta</p>
+						<h1 class="mt-2 text-2xl font-black tracking-tight md:text-4xl">Panel demo del consultorio</h1>
+						<p class="mt-2 max-w-2xl text-sm leading-6 text-white/85">
+							Seguimiento de la conversación capturada por el asistente dental. La información se carga sólo desde el endpoint interno del panel.
+						</p>
+					</div>
+
+					<div class="flex flex-wrap items-center gap-2">
+						<a
+							href="/"
+							class="rounded-2xl border border-white/40 bg-white/15 px-4 py-3 text-xs font-black uppercase tracking-wide text-white backdrop-blur transition hover:bg-white/25"
+						>
+							Volver al sitio
+						</a>
+						<button
+							type="button"
+							disabled
+							title="Disponible en la versión completa"
+							class="cursor-not-allowed rounded-2xl border border-white/25 bg-white/10 px-4 py-3 text-xs font-black uppercase tracking-wide text-white/55"
+						>
+							Enviar reporte por email
+						</button>
+					</div>
+				</div>
+			</header>
+
+			<section id="panel-loading" class="rounded-[2rem] border border-mint-100 bg-white p-8 shadow-xl shadow-mint-900/5">
+				<p class="text-xs font-black uppercase tracking-[0.25em] text-mint-600">Cargando panel</p>
+				<p class="mt-3 text-sm text-slate-500">Validando el enlace y preparando los datos de esta sesión…</p>
+			</section>
+
+			<section id="panel-error" class="hidden rounded-[2rem] border border-rose-200 bg-white p-8 shadow-xl shadow-rose-900/5">
+				<p id="panel-error-kicker" class="text-xs font-black uppercase tracking-[0.25em] text-rose-500">No se pudo abrir el panel</p>
+				<h2 class="mt-3 text-2xl font-black text-slate-950">Revisa el enlace de acceso</h2>
+				<p id="panel-error-message" class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+					El enlace del panel no es válido o ya expiró.
+				</p>
+				<a
+					href="/"
+					class="mt-6 inline-flex rounded-2xl bg-mint-500 px-5 py-3 text-xs font-black uppercase tracking-wide text-white transition hover:bg-mint-600"
+				>
+					Volver al sitio principal
+				</a>
+			</section>
+
+			<section id="panel-content" class="hidden flex-col gap-6">
+				<section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+					<article class="rounded-[1.75rem] border border-mint-100 bg-white p-5 shadow-lg shadow-mint-900/5">
+						<p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Total mensajes</p>
+						<p id="metric-total-messages" class="mt-4 text-4xl font-black text-slate-950">0</p>
+						<p class="mt-2 text-xs text-slate-500">Conversación de esta sesión</p>
+					</article>
+					<article class="rounded-[1.75rem] border border-mint-100 bg-white p-5 shadow-lg shadow-mint-900/5">
+						<p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Visitante</p>
+						<p id="metric-user-messages" class="mt-4 text-4xl font-black text-mint-600">0</p>
+						<p class="mt-2 text-xs text-slate-500">Mensajes del paciente demo</p>
+					</article>
+					<article class="rounded-[1.75rem] border border-mint-100 bg-white p-5 shadow-lg shadow-mint-900/5">
+						<p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Asistente</p>
+						<p id="metric-assistant-messages" class="mt-4 text-4xl font-black text-cyan-600">0</p>
+						<p class="mt-2 text-xs text-slate-500">Respuestas generadas</p>
+					</article>
+					<article class="rounded-[1.75rem] border border-mint-100 bg-white p-5 shadow-lg shadow-mint-900/5">
+						<p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Última actividad</p>
+						<p id="metric-last-activity" class="mt-4 text-lg font-black text-slate-950">—</p>
+						<p class="mt-2 text-xs text-slate-500">Según la sesión cargada</p>
+					</article>
+				</section>
+
+				<section class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.75fr)]">
+					<div class="flex flex-col gap-6">
+						<section class="rounded-[2rem] border border-mint-100 bg-white p-5 shadow-xl shadow-mint-900/5">
+							<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+								<div>
+									<p class="text-[10px] font-black uppercase tracking-[0.25em] text-mint-600">Actividad</p>
+									<h2 class="mt-2 text-2xl font-black text-slate-950">Mensajes por día</h2>
+								</div>
+								<p id="chart-filter-label" class="text-xs font-semibold text-slate-500">Últimos 7 días</p>
+							</div>
+							<div id="activity-chart" class="mt-8 flex h-36 items-end gap-2"></div>
+						</section>
+
+						<section class="overflow-hidden rounded-[2rem] border border-mint-100 bg-white shadow-xl shadow-mint-900/5">
+							<div class="border-b border-mint-100 p-5">
+								<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+									<div>
+										<p class="text-[10px] font-black uppercase tracking-[0.25em] text-mint-600">Conversación</p>
+										<h2 class="mt-2 text-2xl font-black text-slate-950">Mensajes</h2>
+									</div>
+
+									<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+										<div class="flex rounded-2xl border border-mint-100 bg-mint-50 p-1">
+											<button type="button" data-role-filter="all" class="role-filter rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-wide transition">Todos</button>
+											<button type="button" data-role-filter="user" class="role-filter rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-wide transition">Visitante</button>
+											<button type="button" data-role-filter="assistant" class="role-filter rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-wide transition">Asistente</button>
+										</div>
+
+										<label class="relative block">
+											<span class="sr-only">Buscar mensajes</span>
+											<input
+												id="message-search"
+												type="search"
+												placeholder="Buscar mensajes…"
+												class="w-full rounded-2xl border border-mint-100 bg-white px-4 py-3 text-xs font-semibold text-slate-700 outline-none transition focus:border-mint-400 focus:ring-2 focus:ring-mint-200 sm:w-72"
+											/>
+										</label>
+									</div>
+								</div>
+
+								<div class="mt-4 flex flex-wrap gap-2">
+									<button
+										type="button"
+										id="clear-filters"
+										class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-rose-600 transition hover:bg-rose-100"
+									>
+										Limpiar filtros
+									</button>
+									<button type="button" disabled title="Disponible en la versión completa" class="cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-slate-400">
+										Descargar CSV
+									</button>
+									<button type="button" disabled title="Disponible en la versión completa" class="cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-slate-400">
+										Exportar conversación
+									</button>
+									<button type="button" disabled title="Disponible en la versión completa" class="cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-slate-400">
+										Ver canal WhatsApp
+									</button>
+									<span class="inline-flex items-center rounded-xl bg-slate-100 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+										Disponible en la versión completa
+									</span>
+								</div>
+							</div>
+
+							<div class="overflow-x-auto">
+								<table class="w-full min-w-[760px] table-fixed text-left">
+									<thead class="border-b border-mint-100 bg-slate-50 text-[10px] uppercase tracking-[0.18em] text-slate-500">
+										<tr>
+											<th class="w-36 px-5 py-4">Fecha</th>
+											<th class="w-28 px-5 py-4">Canal</th>
+											<th class="w-32 px-5 py-4">Rol</th>
+											<th class="px-5 py-4">Mensaje</th>
+											<th class="w-36 px-5 py-4">Acción</th>
+										</tr>
+									</thead>
+									<tbody id="messages-table-body" class="divide-y divide-mint-100"></tbody>
+								</table>
+							</div>
+
+							<div id="messages-empty" class="hidden p-8 text-center">
+								<p class="text-sm font-black text-slate-800">Sesión sin mensajes</p>
+								<p class="mt-2 text-sm text-slate-500">Cuando el visitante converse con MentaBot, los mensajes aparecerán aquí.</p>
+							</div>
+
+							<div id="messages-filter-empty" class="hidden p-8 text-center">
+								<p class="text-sm font-black text-slate-800">Sin resultados</p>
+								<p class="mt-2 text-sm text-slate-500">No hay mensajes que coincidan con los filtros actuales.</p>
+							</div>
+						</section>
+					</div>
+
+					<aside class="flex flex-col gap-6">
+						<section class="rounded-[2rem] border border-mint-100 bg-white p-5 shadow-xl shadow-mint-900/5">
+							<p class="text-[10px] font-black uppercase tracking-[0.25em] text-mint-600">Sesión</p>
+							<h2 class="mt-2 text-2xl font-black text-slate-950">Resumen de sesión</h2>
+							<dl class="mt-5 space-y-4">
+								<div>
+									<dt class="text-[10px] font-black uppercase tracking-wide text-slate-400">Folio demo</dt>
+									<dd id="session-folio" class="mt-1 text-lg font-black text-slate-950">—</dd>
+								</div>
+								<div>
+									<dt class="text-[10px] font-black uppercase tracking-wide text-slate-400">Status</dt>
+									<dd id="session-status" class="mt-1 text-sm font-black text-mint-700">—</dd>
+								</div>
+								<div>
+									<dt class="text-[10px] font-black uppercase tracking-wide text-slate-400">Inicio</dt>
+									<dd id="session-started-at" class="mt-1 text-sm font-semibold text-slate-800">—</dd>
+								</div>
+								<div>
+									<dt class="text-[10px] font-black uppercase tracking-wide text-slate-400">Última actividad</dt>
+									<dd id="session-last-seen-at" class="mt-1 text-sm font-semibold text-slate-800">—</dd>
+								</div>
+							</dl>
+						</section>
+
+						<section class="rounded-[2rem] border border-mint-100 bg-white p-5 shadow-xl shadow-mint-900/5">
+							<p class="text-[10px] font-black uppercase tracking-[0.25em] text-mint-600">Actividad</p>
+							<h2 class="mt-2 text-2xl font-black text-slate-950">Actividad del panel</h2>
+							<p class="mt-2 text-sm leading-6 text-slate-500">
+								Resumen comercial de lo que ya ocurrió en esta experiencia demo.
+							</p>
+							<div id="activity-summary-list" class="mt-5 flex flex-col gap-3"></div>
+
+							<details class="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+								<summary class="cursor-pointer text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+									Bitácora técnica
+								</summary>
+								<div id="technical-events-list" class="mt-4 flex flex-col gap-3"></div>
+								<p id="events-empty" class="mt-4 hidden text-sm text-slate-500">
+									Todavía no hay eventos técnicos para esta sesión.
+								</p>
+							</details>
+						</section>
+					</aside>
+				</section>
+			</section>
+		</div>
+
+		<section id="message-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+			<div class="w-full max-w-2xl rounded-[2rem] border border-mint-100 bg-white p-6 shadow-2xl">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<p id="modal-role" class="text-[10px] font-black uppercase tracking-[0.25em] text-mint-600">Mensaje</p>
+						<h2 class="mt-2 text-2xl font-black text-slate-950">Detalle del mensaje</h2>
+						<p id="modal-date" class="mt-2 text-xs font-semibold text-slate-500">—</p>
+					</div>
+					<button
+						type="button"
+						id="modal-close"
+						class="grid h-10 w-10 place-items-center rounded-2xl bg-slate-100 text-xl font-black text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
+						aria-label="Cerrar detalle"
+					>
+						×
+					</button>
+				</div>
+				<div class="mt-5 max-h-[55vh] overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50 p-5">
+					<p id="modal-content" class="whitespace-pre-wrap text-sm leading-7 text-slate-700"></p>
+				</div>
+				<button
+					type="button"
+					id="modal-close-secondary"
+					class="mt-5 w-full rounded-2xl bg-mint-500 px-5 py-3 text-xs font-black uppercase tracking-wide text-white transition hover:bg-mint-600"
+				>
+					Cerrar
+				</button>
+			</div>
+		</section>
+	</main>
+
+	<script is:inline>
+		const loadingEl = document.getElementById('panel-loading');
+		const errorEl = document.getElementById('panel-error');
+		const errorKickerEl = document.getElementById('panel-error-kicker');
+		const errorMessageEl = document.getElementById('panel-error-message');
+		const contentEl = document.getElementById('panel-content');
+		const chartEl = document.getElementById('activity-chart');
+		const chartFilterLabelEl = document.getElementById('chart-filter-label');
+		const messageSearchEl = document.getElementById('message-search');
+		const clearFiltersEl = document.getElementById('clear-filters');
+		const messagesTableBodyEl = document.getElementById('messages-table-body');
+		const messagesEmptyEl = document.getElementById('messages-empty');
+		const messagesFilterEmptyEl = document.getElementById('messages-filter-empty');
+		const activitySummaryListEl = document.getElementById('activity-summary-list');
+		const technicalEventsListEl = document.getElementById('technical-events-list');
+		const eventsEmptyEl = document.getElementById('events-empty');
+		const modalEl = document.getElementById('message-modal');
+		const modalRoleEl = document.getElementById('modal-role');
+		const modalDateEl = document.getElementById('modal-date');
+		const modalContentEl = document.getElementById('modal-content');
+		const modalCloseEl = document.getElementById('modal-close');
+		const modalCloseSecondaryEl = document.getElementById('modal-close-secondary');
+		const roleFilterButtons = Array.from(document.querySelectorAll('.role-filter'));
+
+		let panelMessages = [];
+		let panelEvents = [];
+		let selectedRole = 'all';
+		let selectedDayKey = '';
+		let searchQuery = '';
+
+		function setText(id, value) {
+			const element = document.getElementById(id);
+			if (element) {
+				element.textContent = value || '—';
+			}
+		}
+
+		function formatDate(value) {
+			if (!value) {
+				return '—';
+			}
+
+			const date = new Date(value);
+
+			if (Number.isNaN(date.getTime())) {
+				return value;
+			}
+
+			return new Intl.DateTimeFormat('es-MX', {
+				dateStyle: 'medium',
+				timeStyle: 'short',
+			}).format(date);
+		}
+
+		function formatShortDate(value) {
+			const date = new Date(value);
+
+			if (Number.isNaN(date.getTime())) {
+				return { day: '—', time: '—' };
+			}
+
+			return {
+				day: new Intl.DateTimeFormat('es-MX', {
+					day: '2-digit',
+					month: '2-digit',
+				}).format(date),
+				time: new Intl.DateTimeFormat('es-MX', {
+					hour: '2-digit',
+					minute: '2-digit',
+				}).format(date),
+			};
+		}
+
+		function getDayKey(value) {
+			const date = new Date(value);
+
+			if (Number.isNaN(date.getTime())) {
+				return '';
+			}
+
+			return date.toISOString().slice(0, 10);
+		}
+
+		function getDayLabel(date) {
+			return new Intl.DateTimeFormat('es-MX', {
+				weekday: 'short',
+				day: 'numeric',
+			}).format(date);
+		}
+
+		function getDemoFolio(sessionId) {
+			const safeId = String(sessionId || '').replace(/[^a-zA-Z0-9]/g, '');
+
+			if (!safeId) {
+				return '—';
+			}
+
+			return `MD-${safeId.slice(-8).toUpperCase()}`;
+		}
+
+		function showError(message, kind = 'error') {
+			if (loadingEl) {
+				loadingEl.classList.add('hidden');
+			}
+
+			if (contentEl) {
+				contentEl.classList.add('hidden');
+				contentEl.classList.remove('flex');
+			}
+
+			if (errorKickerEl) {
+				errorKickerEl.textContent = kind === 'missing-token'
+					? 'Token faltante'
+					: kind === 'network'
+						? 'Error de red'
+						: 'Token inválido o expirado';
+			}
+
+			if (errorMessageEl) {
+				errorMessageEl.textContent = message;
+			}
+
+			if (errorEl) {
+				errorEl.classList.remove('hidden');
+			}
+		}
+
+		function showContent() {
+			if (loadingEl) {
+				loadingEl.classList.add('hidden');
+			}
+
+			if (errorEl) {
+				errorEl.classList.add('hidden');
+			}
+
+			if (contentEl) {
+				contentEl.classList.remove('hidden');
+				contentEl.classList.add('flex');
+			}
+		}
+
+		function updateRoleButtons() {
+			for (const button of roleFilterButtons) {
+				const isActive = button.getAttribute('data-role-filter') === selectedRole;
+				button.classList.toggle('bg-mint-500', isActive);
+				button.classList.toggle('text-white', isActive);
+				button.classList.toggle('shadow', isActive);
+				button.classList.toggle('text-slate-500', !isActive);
+			}
+		}
+
+		function getFilteredMessages() {
+			const normalizedSearch = searchQuery.trim().toLowerCase();
+
+			return panelMessages.filter((message) => {
+				const roleMatches = selectedRole === 'all' || message.role === selectedRole;
+				const dayMatches = !selectedDayKey || getDayKey(message.created_at) === selectedDayKey;
+				const searchMatches = !normalizedSearch
+					|| String(message.content || '').toLowerCase().includes(normalizedSearch)
+					|| String(message.role || '').toLowerCase().includes(normalizedSearch)
+					|| String(message.channel || '').toLowerCase().includes(normalizedSearch);
+
+				return roleMatches && dayMatches && searchMatches;
+			});
+		}
+
+		function openModal(message) {
+			if (modalRoleEl) {
+				modalRoleEl.textContent = `${message.role || 'Mensaje'} · ${message.channel || 'web_chat'}`;
+			}
+
+			if (modalDateEl) {
+				modalDateEl.textContent = formatDate(message.created_at);
+			}
+
+			if (modalContentEl) {
+				modalContentEl.textContent = message.content || '';
+			}
+
+			if (modalEl) {
+				modalEl.classList.remove('hidden');
+				modalEl.classList.add('flex');
+			}
+		}
+
+		function closeModal() {
+			if (modalEl) {
+				modalEl.classList.add('hidden');
+				modalEl.classList.remove('flex');
+			}
+		}
+
+		function renderMessagesTable() {
+			if (!messagesTableBodyEl || !messagesEmptyEl || !messagesFilterEmptyEl) {
+				return;
+			}
+
+			messagesTableBodyEl.textContent = '';
+
+			if (panelMessages.length === 0) {
+				messagesEmptyEl.classList.remove('hidden');
+				messagesFilterEmptyEl.classList.add('hidden');
+				return;
+			}
+
+			messagesEmptyEl.classList.add('hidden');
+			const messages = getFilteredMessages();
+
+			if (messages.length === 0) {
+				messagesFilterEmptyEl.classList.remove('hidden');
+				return;
+			}
+
+			messagesFilterEmptyEl.classList.add('hidden');
+
+			for (const message of messages) {
+				const row = document.createElement('tr');
+				row.className = 'transition hover:bg-mint-50/80';
+
+				const dateCell = document.createElement('td');
+				dateCell.className = 'px-5 py-4 align-top';
+				const shortDate = formatShortDate(message.created_at);
+				const day = document.createElement('p');
+				day.className = 'text-xs font-black text-mint-700';
+				day.textContent = shortDate.day;
+				const time = document.createElement('p');
+				time.className = 'mt-1 text-[10px] font-mono text-slate-400';
+				time.textContent = shortDate.time;
+				dateCell.append(day, time);
+
+				const channelCell = document.createElement('td');
+				channelCell.className = 'px-5 py-4 align-top';
+				const channel = document.createElement('span');
+				channel.className = 'inline-flex rounded-full bg-cyan-50 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-700';
+				channel.textContent = message.channel || 'web_chat';
+				channelCell.append(channel);
+
+				const roleCell = document.createElement('td');
+				roleCell.className = 'px-5 py-4 align-top';
+				const role = document.createElement('span');
+				const isUser = message.role === 'user';
+				role.className = isUser
+					? 'inline-flex rounded-full bg-mint-50 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-mint-700'
+					: 'inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-slate-700';
+				role.textContent = isUser ? 'Visitante' : message.role || '—';
+				roleCell.append(role);
+
+				const contentCell = document.createElement('td');
+				contentCell.className = 'px-5 py-4 align-top';
+				const content = document.createElement('p');
+				content.className = 'line-clamp-2 text-sm leading-6 text-slate-700';
+				content.textContent = message.content || '';
+				contentCell.append(content);
+
+				const actionCell = document.createElement('td');
+				actionCell.className = 'px-5 py-4 align-top';
+				const action = document.createElement('button');
+				action.type = 'button';
+				action.className = 'rounded-xl border border-mint-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wide text-mint-700 transition hover:bg-mint-500 hover:text-white';
+				action.textContent = 'Ver detalle';
+				action.addEventListener('click', () => openModal(message));
+				actionCell.append(action);
+
+				row.append(dateCell, channelCell, roleCell, contentCell, actionCell);
+				messagesTableBodyEl.append(row);
+			}
+		}
+
+		function createActivitySummaryItem(label, value, description, tone = 'mint') {
+			const item = document.createElement('article');
+			item.className = 'rounded-2xl border border-slate-100 bg-slate-50 p-4';
+
+			const row = document.createElement('div');
+			row.className = 'flex items-start justify-between gap-4';
+
+			const textGroup = document.createElement('div');
+			const title = document.createElement('p');
+			title.className = 'text-sm font-black text-slate-900';
+			title.textContent = label;
+
+			const detail = document.createElement('p');
+			detail.className = 'mt-1 text-xs leading-5 text-slate-500';
+			detail.textContent = description;
+
+			const badge = document.createElement('span');
+			badge.className = tone === 'cyan'
+				? 'shrink-0 rounded-full bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-700'
+				: 'shrink-0 rounded-full bg-mint-50 px-3 py-1 text-xs font-black text-mint-700';
+			badge.textContent = value;
+
+			textGroup.append(title, detail);
+			row.append(textGroup, badge);
+			item.append(row);
+
+			return item;
+		}
+
+		function hasEvent(eventName) {
+			return panelEvents.some((event) => event.event_name === eventName);
+		}
+
+		function renderActivitySummary() {
+			if (!activitySummaryListEl) {
+				return;
+			}
+
+			activitySummaryListEl.textContent = '';
+			const userMessages = panelMessages.filter((message) => message.role === 'user').length;
+			const assistantMessages = panelMessages.filter((message) => message.role === 'assistant').length;
+			const conversationStarted = panelMessages.length > 0 || hasEvent('mentedenta_session_created');
+			const panelOpened = hasEvent('panel_data_viewed');
+
+			activitySummaryListEl.append(
+				createActivitySummaryItem(
+					'Conversación iniciada',
+					conversationStarted ? 'Sí' : 'Pendiente',
+					conversationStarted
+						? 'La experiencia demo ya tiene actividad registrada.'
+						: 'Aún no se detectan mensajes en esta sesión.',
+				),
+				createActivitySummaryItem(
+					'Mensajes del visitante',
+					String(userMessages),
+					'Preguntas o respuestas enviadas por el paciente demo.',
+				),
+				createActivitySummaryItem(
+					'Respuestas del asistente',
+					String(assistantMessages),
+					'Mensajes generados por MentaBot para esta sesión.',
+					'cyan',
+				),
+				createActivitySummaryItem(
+					'Panel abierto',
+					panelOpened ? 'Sí' : 'Pendiente',
+					panelOpened
+						? 'El enlace del panel ya fue usado para consultar esta sesión.'
+						: 'El panel todavía no registra una apertura confirmada.',
+				),
+			);
+		}
+
+		function renderTechnicalEvents() {
+			if (!technicalEventsListEl || !eventsEmptyEl) {
+				return;
+			}
+
+			technicalEventsListEl.textContent = '';
+
+			if (panelEvents.length === 0) {
+				eventsEmptyEl.classList.remove('hidden');
+				return;
+			}
+
+			eventsEmptyEl.classList.add('hidden');
+
+			for (const event of panelEvents) {
+				const item = document.createElement('article');
+				item.className = 'rounded-xl border border-slate-200 bg-white p-3';
+
+				const name = document.createElement('p');
+				name.className = 'text-xs font-black text-slate-700';
+				name.textContent = event.event_name || '—';
+
+				const occurredAt = document.createElement('p');
+				occurredAt.className = 'mt-1 text-[11px] font-semibold text-slate-500';
+				occurredAt.textContent = formatDate(event.occurred_at);
+
+				item.append(name, occurredAt);
+				technicalEventsListEl.append(item);
+			}
+		}
+
+		function renderEvents() {
+			renderActivitySummary();
+			renderTechnicalEvents();
+		}
+
+		function renderChart() {
+			if (!chartEl || !chartFilterLabelEl) {
+				return;
+			}
+
+			chartEl.textContent = '';
+			const today = new Date();
+			const days = [];
+
+			for (let index = 6; index >= 0; index -= 1) {
+				const date = new Date(today);
+				date.setDate(today.getDate() - index);
+				const key = date.toISOString().slice(0, 10);
+				const count = panelMessages.filter((message) => getDayKey(message.created_at) === key).length;
+				days.push({ key, label: getDayLabel(date), count });
+			}
+
+			const maxCount = Math.max(...days.map((day) => day.count), 1);
+
+			for (const day of days) {
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'group flex h-full flex-1 flex-col justify-end rounded-2xl border border-transparent p-1 transition hover:border-mint-200 hover:bg-mint-50';
+				button.addEventListener('click', () => {
+					selectedDayKey = selectedDayKey === day.key ? '' : day.key;
+					renderChart();
+					renderMessagesTable();
+				});
+
+				const count = document.createElement('span');
+				count.className = 'mb-2 text-center text-[10px] font-black text-mint-700';
+				count.textContent = String(day.count);
+
+				const bar = document.createElement('span');
+				const height = Math.max((day.count / maxCount) * 100, day.count > 0 ? 12 : 5);
+				bar.className = selectedDayKey === day.key
+					? 'block w-full rounded-t-xl bg-mint-500 shadow-lg shadow-mint-500/20'
+					: 'block w-full rounded-t-xl bg-mint-200 transition group-hover:bg-mint-400';
+				bar.style.height = `${height}%`;
+
+				const label = document.createElement('span');
+				label.className = 'mt-2 text-center text-[9px] font-black uppercase text-slate-400';
+				label.textContent = day.label;
+
+				button.append(count, bar, label);
+				chartEl.append(button);
+			}
+
+			const selectedDay = days.find((day) => day.key === selectedDayKey);
+			chartFilterLabelEl.textContent = selectedDay
+				? `Filtrando: ${selectedDay.label}`
+				: 'Últimos 7 días';
+		}
+
+		function renderMetrics(session) {
+			const userMessages = panelMessages.filter((message) => message.role === 'user').length;
+			const assistantMessages = panelMessages.filter((message) => message.role === 'assistant').length;
+
+			setText('metric-total-messages', String(panelMessages.length));
+			setText('metric-user-messages', String(userMessages));
+			setText('metric-assistant-messages', String(assistantMessages));
+			setText('metric-last-activity', formatDate(session?.last_seen_at));
+			setText('session-folio', getDemoFolio(session?.id));
+			setText('session-status', session?.status);
+			setText('session-started-at', formatDate(session?.started_at));
+			setText('session-last-seen-at', formatDate(session?.last_seen_at));
+		}
+
+		function renderPanel(data) {
+			panelMessages = Array.isArray(data.messages) ? data.messages : [];
+			panelEvents = Array.isArray(data.events) ? data.events : [];
+
+			renderMetrics(data.session);
+			updateRoleButtons();
+			renderChart();
+			renderMessagesTable();
+			renderEvents();
+			showContent();
+		}
+
+		async function loadPanelData() {
+			const token = new URLSearchParams(window.location.search).get('token')?.trim();
+
+			if (!token) {
+				showError('Falta el token de acceso al panel. Revisa que el enlace esté completo.', 'missing-token');
+				return;
+			}
+
+			try {
+				const response = await fetch(`/api/mentedenta/panel-data?token=${encodeURIComponent(token)}`, {
+					headers: {
+						accept: 'application/json',
+					},
+				});
+				const data = await response.json().catch(() => null);
+
+				if (!response.ok || !data?.ok) {
+					showError(data?.error || 'El enlace del panel no es válido o ya expiró.', 'invalid-token');
+					return;
+				}
+
+				renderPanel(data);
+			} catch {
+				showError('No se pudo conectar con el panel en este momento. Intenta abrir el enlace de nuevo.', 'network');
+			}
+		}
+
+		for (const button of roleFilterButtons) {
+			button.addEventListener('click', () => {
+				selectedRole = button.getAttribute('data-role-filter') || 'all';
+				updateRoleButtons();
+				renderMessagesTable();
+			});
+		}
+
+		messageSearchEl?.addEventListener('input', (event) => {
+			const target = event.target;
+			searchQuery = target instanceof HTMLInputElement ? target.value : '';
+			renderMessagesTable();
+		});
+
+		clearFiltersEl?.addEventListener('click', () => {
+			selectedRole = 'all';
+			selectedDayKey = '';
+			searchQuery = '';
+
+			if (messageSearchEl instanceof HTMLInputElement) {
+				messageSearchEl.value = '';
+			}
+
+			updateRoleButtons();
+			renderChart();
+			renderMessagesTable();
+		});
+
+		modalCloseEl?.addEventListener('click', closeModal);
+		modalCloseSecondaryEl?.addEventListener('click', closeModal);
+		modalEl?.addEventListener('click', (event) => {
+			if (event.target === modalEl) {
+				closeModal();
+			}
+		});
+
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape') {
+				closeModal();
+			}
+		});
+
+		loadPanelData();
+	</script>
+</Layout>
