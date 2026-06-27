@@ -4,7 +4,7 @@ import { recordEvent } from '@/lib/mentedenta/events';
 import { getRecentMessageHistory, saveMessage } from '@/lib/mentedenta/messages';
 import { callMenteDentaWebhook } from '@/lib/mentedenta/n8n';
 import { sanitizeMenteDentaText } from '@/lib/mentedenta/sanitize';
-import { getSessionById, updateSessionLastSeen } from '@/lib/mentedenta/sessions';
+import { getSessionById, updateSessionLastSeen, type MenteDentaSession } from '@/lib/mentedenta/sessions';
 
 const FALLBACK_REPLY = 'En este momento tuve un problema para responder, pero tu mensaje quedó registrado.';
 
@@ -21,6 +21,80 @@ function jsonResponse(body: Record<string, unknown>, status: number): Response {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
+}
+
+function sanitizeMetadataValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return sanitizeMenteDentaText(value).content;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(sanitizeMetadataValue);
+  }
+
+  if (isRecord(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [key, sanitizeMetadataValue(nestedValue)]),
+    );
+  }
+
+  return value;
+}
+
+function getSafeRequestMetadata(metadata: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(metadata)
+      .filter(([key]) => !/(token|hash|secret|password|api_key|apikey)/i.test(key))
+      .map(([key, value]) => [key, sanitizeMetadataValue(value)]),
+  );
+}
+
+function buildWebhookMetadata(
+  requestMetadata: Record<string, unknown>,
+  session: MenteDentaSession,
+  scenario: string,
+): Record<string, unknown> {
+  const sessionMetadata = isRecord(session.metadata) ? session.metadata : {};
+  const businessName = optionalString(sessionMetadata.business_name);
+  const businessType = optionalString(sessionMetadata.business_type);
+  const city = optionalString(sessionMetadata.city);
+  const demoType = optionalString(sessionMetadata.demo_type);
+  const campaign = optionalString(sessionMetadata.campaign);
+  const hasEmailOnFile = Boolean(session.prospect_email);
+  const hasPhoneOnFile = Boolean(session.prospect_phone);
+
+  return {
+    ...getSafeRequestMetadata(requestMetadata),
+    session: {
+      source: session.source,
+      scenario: session.scenario || scenario,
+      is_identified: Boolean(
+        session.prospect_name
+        || hasEmailOnFile
+        || hasPhoneOnFile
+        || businessName
+        || businessType
+        || city
+      ),
+    },
+    prospect: {
+      ...(session.prospect_name ? { name: session.prospect_name } : {}),
+      ...(businessName ? { business_name: businessName } : {}),
+      ...(businessType ? { business_type: businessType } : {}),
+      ...(city ? { city } : {}),
+      has_email_on_file: hasEmailOnFile,
+      has_phone_on_file: hasPhoneOnFile,
+      has_contact_on_file: hasEmailOnFile || hasPhoneOnFile,
+    },
+    demo: {
+      ...(demoType ? { type: demoType } : {}),
+      ...(campaign ? { campaign } : {}),
+    },
+  };
 }
 
 async function readJson(request: Request): Promise<MessageRequestBody> {
@@ -76,6 +150,7 @@ export const POST: APIRoute = async ({ request }) => {
       ...historyMessage,
       content: sanitizeMenteDentaText(historyMessage.content).content,
     }));
+    const webhookMetadata = buildWebhookMetadata(metadata, session, scenario);
 
     await saveMessage({
       session_id: sessionId,
@@ -100,7 +175,7 @@ export const POST: APIRoute = async ({ request }) => {
         message: sanitizedUserMessage.content,
         scenario,
         history: sanitizedHistory,
-        metadata,
+        metadata: webhookMetadata,
       });
 
       reply = webhookResponse.reply;
