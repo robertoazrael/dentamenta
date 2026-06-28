@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 
+import { createHandoffAccessToken, type MenteDentaHandoffType } from '@/lib/mentedenta/accessTokens';
 import { recordEvent } from '@/lib/mentedenta/events';
 import { getRecentMessageHistory, saveMessage } from '@/lib/mentedenta/messages';
 import { callMenteDentaWebhook } from '@/lib/mentedenta/n8n';
@@ -13,6 +14,13 @@ interface MessageRequestBody {
   message?: unknown;
   scenario?: unknown;
   metadata?: unknown;
+}
+
+interface HandoffContext {
+  target: 'mentematica';
+  type: MenteDentaHandoffType;
+  url: string;
+  has_contact_on_file: boolean;
 }
 
 function jsonResponse(body: Record<string, unknown>, status: number): Response {
@@ -57,6 +65,7 @@ function buildWebhookMetadata(
   requestMetadata: Record<string, unknown>,
   session: MenteDentaSession,
   scenario: string,
+  handoff?: HandoffContext,
 ): Record<string, unknown> {
   const sessionMetadata = isRecord(session.metadata) ? session.metadata : {};
   const businessName = optionalString(sessionMetadata.business_name);
@@ -94,7 +103,87 @@ function buildWebhookMetadata(
       ...(demoType ? { type: demoType } : {}),
       ...(campaign ? { campaign } : {}),
     },
+    ...(handoff ? { handoff } : {}),
   };
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function hasMentematicaSalesIntent(message: string): boolean {
+  const normalizedMessage = normalizeText(message);
+
+  return [
+    'mentematica',
+    'roberto',
+    'chatbot',
+    'automatizacion',
+    'automatizar',
+    'contratar',
+    'cotizar',
+    'precio del sistema',
+    'precios del sistema',
+    'comprar',
+    'adquirir',
+    'quiero comprar',
+    'quiero uno como este',
+    'quiero una como esta',
+    'quiero hablar con alguien',
+    'hablar con alguien',
+    'opciones de este chat',
+  ].some((phrase) => normalizedMessage.includes(phrase));
+}
+
+async function createHandoffContext(session: MenteDentaSession): Promise<HandoffContext | undefined> {
+  const hasContactOnFile = Boolean(session.prospect_email || session.prospect_phone);
+  const handoffType: MenteDentaHandoffType = hasContactOnFile ? 'identified' : 'anonymous';
+
+  try {
+    const handoff = await createHandoffAccessToken(session.id, handoffType, 'sales_interest');
+
+    try {
+      await recordEvent({
+        session_id: session.id,
+        event_name: 'mentematica_handoff_requested',
+        metadata: {
+          target: 'mentematica',
+          handoff_type: handoffType,
+          has_contact_on_file: hasContactOnFile,
+        },
+      });
+    } catch (eventError) {
+      console.error('Failed to record MenteDenta handoff requested event', eventError);
+    }
+
+    return {
+      target: 'mentematica',
+      type: handoff.handoff_type,
+      url: handoff.handoff_url,
+      has_contact_on_file: hasContactOnFile,
+    };
+  } catch (error) {
+    console.error('Failed to create MenteDenta handoff token', error);
+
+    try {
+      await recordEvent({
+        session_id: session.id,
+        event_name: 'mentematica_handoff_error',
+        metadata: {
+          target: 'mentematica',
+          handoff_type: handoffType,
+          has_contact_on_file: hasContactOnFile,
+        },
+      });
+    } catch (eventError) {
+      console.error('Failed to record MenteDenta handoff error event', eventError);
+    }
+
+    return undefined;
+  }
 }
 
 async function readJson(request: Request): Promise<MessageRequestBody> {
@@ -150,7 +239,10 @@ export const POST: APIRoute = async ({ request }) => {
       ...historyMessage,
       content: sanitizeMenteDentaText(historyMessage.content).content,
     }));
-    const webhookMetadata = buildWebhookMetadata(metadata, session, scenario);
+    const handoffContext = hasMentematicaSalesIntent(sanitizedUserMessage.content)
+      ? await createHandoffContext(session)
+      : undefined;
+    const webhookMetadata = buildWebhookMetadata(metadata, session, scenario, handoffContext);
 
     await saveMessage({
       session_id: sessionId,
