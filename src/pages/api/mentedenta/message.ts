@@ -111,31 +111,88 @@ function normalizeText(value: string): string {
   return value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function getNormalizedTokens(value: string): string[] {
+  return normalizeText(value).split(' ').filter(Boolean);
+}
+
+function hasAnyPhrase(normalizedMessage: string, phrases: string[]): boolean {
+  return phrases.some((phrase) => normalizedMessage.includes(normalizeText(phrase)));
+}
+
+function hasAnyTokenPrefix(tokens: string[], prefixes: string[]): boolean {
+  return tokens.some((token) => prefixes.some((prefix) => token.startsWith(prefix)));
 }
 
 function hasMentematicaSalesIntent(message: string): boolean {
   const normalizedMessage = normalizeText(message);
+  const tokens = getNormalizedTokens(message);
 
-  return [
-    'mentematica',
-    'roberto',
-    'chatbot',
-    'automatizacion',
-    'automatizar',
-    'contratar',
-    'cotizar',
-    'precio del sistema',
-    'precios del sistema',
-    'comprar',
-    'adquirir',
+  // Nombres/marca con tolerancia a errores frecuentes y menciones parciales seguras.
+  const mentionsMentematica = hasAnyTokenPrefix(tokens, ['mentematic']);
+  const mentionsRobertoOrMedina = tokens.includes('medina') || hasAnyTokenPrefix(tokens, ['rober']);
+
+  const mentionsAutomation = hasAnyTokenPrefix(tokens, ['automatiz']);
+  const mentionsChatbot = tokens.includes('chatbot') || hasAnyTokenPrefix(tokens, ['chatbot']);
+  const mentionsChat = tokens.includes('chat');
+  const mentionsSystemOrService = hasAnyTokenPrefix(tokens, ['sistem', 'servici', 'product']);
+  const mentionsBusiness = hasAnyTokenPrefix(tokens, ['negoci', 'empresa', 'consultori']);
+
+  const wantsContact = hasAnyPhrase(normalizedMessage, [
+    'hablar con alguien',
+    'hablar con rober',
+    'hablar con roberto',
+    'puedo hablar con alguien',
+    'puedo hablar con rober',
+    'puedo hablar con roberto',
+  ]);
+  const wantsToAcquire = hasAnyPhrase(normalizedMessage, [
     'quiero comprar',
+    'quiero contratar',
+    'quiero cotizar',
+    'quiero adquirir',
     'quiero uno como este',
     'quiero una como esta',
-    'quiero hablar con alguien',
-    'hablar con alguien',
+  ]) || hasAnyTokenPrefix(tokens, ['contrat', 'cotiz', 'compr', 'adquiir', 'adquir']);
+  const asksPrice = hasAnyTokenPrefix(tokens, ['preci', 'cost']) || hasAnyPhrase(normalizedMessage, [
+    'cuanto cuesta',
+    'cuanto vale',
+    'precio del sistema',
+    'precios del sistema',
+  ]);
+  const asksAboutThisChat = hasAnyPhrase(normalizedMessage, [
     'opciones de este chat',
-  ].some((phrase) => normalizedMessage.includes(phrase));
+    'este chat para mi negocio',
+    'servicio de chat',
+    'sistema de chat',
+  ]);
+
+  if (mentionsMentematica || mentionsRobertoOrMedina || mentionsAutomation) {
+    return true;
+  }
+
+  if (asksAboutThisChat) {
+    return true;
+  }
+
+  if (mentionsChatbot && (wantsContact || wantsToAcquire || asksPrice || mentionsBusiness)) {
+    return true;
+  }
+
+  if ((mentionsChat || mentionsSystemOrService) && (wantsContact || wantsToAcquire || asksPrice || mentionsBusiness)) {
+    return true;
+  }
+
+  if (wantsToAcquire && (mentionsBusiness || mentionsChat || mentionsChatbot || mentionsSystemOrService)) {
+    return true;
+  }
+
+  return false;
 }
 
 async function createHandoffContext(session: MenteDentaSession): Promise<HandoffContext | undefined> {
