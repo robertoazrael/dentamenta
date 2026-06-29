@@ -1,5 +1,8 @@
 ---
 import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
+
+const mentematicaDefaultContactUrl = import.meta.env.MENTEMATICA_DEFAULT_CONTACT_URL
+    || 'https://mentematica.com/#contacto';
 ---
 
 <div class="fixed bottom-8 right-8 z-[100] flex flex-col items-end">
@@ -31,6 +34,9 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
             <button id="panel-open" type="button" class="w-full rounded-xl border border-mint-600 bg-mint-500 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-mint-500/25 transition-all hover:bg-accent hover:shadow-accent/25 active:scale-[0.98] dark:border-mint-400 dark:bg-mint-500 dark:text-white">
                 Ver panel del consultorio
             </button>
+            <a id="mentematica-contact" href={mentematicaDefaultContactUrl} target="_blank" rel="noreferrer" class="mt-2 flex w-full items-center justify-center rounded-xl border border-cyan-200 bg-cyan-100 px-4 py-3 text-xs font-bold text-slate-900 shadow-sm transition-all hover:bg-mint-100 hover:border-mint-300 active:scale-[0.98] dark:border-cyan-500/40 dark:bg-cyan-400 dark:text-slate-950">
+                Hablar con Mentemática
+            </a>
             <p id="chat-status" class="mt-2 min-h-4 text-[10px] font-medium text-slate-500 dark:text-slate-400"></p>
         </div>
     </div>
@@ -53,6 +59,7 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
     const chatSubmit = document.getElementById('chat-submit');
     const chatStatus = document.getElementById('chat-status');
     const panelOpen = document.getElementById('panel-open');
+    const mentematicaContact = document.getElementById('mentematica-contact');
 
     localStorage.removeItem(PANEL_URL_STORAGE_KEY);
 
@@ -60,6 +67,10 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
     let chatHistory = readStoredHistory();
     let isSending = false;
     let typingIndicator = null;
+    let latestHandoffUrl = '';
+    const defaultMentematicaContactUrl = mentematicaContact instanceof HTMLAnchorElement
+        ? mentematicaContact.href
+        : 'https://mentematica.com/#contacto';
 
     function setStatus(message) {
         if (chatStatus) {
@@ -89,9 +100,52 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(chatHistory));
     }
 
+    function isMentematicaHandoffUrl(value) {
+        try {
+            const url = new URL(value);
+            const hostname = url.hostname.toLowerCase();
+            const isMentematicaHost = hostname === 'mentematica.com'
+                || hostname.endsWith('.mentematica.com')
+                || hostname.includes('mentematica-stage.netlify.app');
+
+            return isMentematicaHost
+                && url.pathname.startsWith('/demo-dentamenta/')
+                && url.searchParams.has('handoff_token');
+        } catch {
+            return false;
+        }
+    }
+
+    function findHandoffUrls(content) {
+        const matches = content.match(/https?:\/\/[^\s<>"')]+/g) || [];
+        return matches
+            .map((match) => match.replace(/[.,!?;:]+$/, ''))
+            .filter(isMentematicaHandoffUrl);
+    }
+
+    function updateMentematicaContactButton(url = '') {
+        if (!(mentematicaContact instanceof HTMLAnchorElement)) {
+            return;
+        }
+
+        if (url) {
+            latestHandoffUrl = url;
+            mentematicaContact.href = url;
+            mentematicaContact.textContent = 'Continuar con Mentemática';
+            return;
+        }
+
+        if (!latestHandoffUrl) {
+            mentematicaContact.href = defaultMentematicaContactUrl;
+            mentematicaContact.textContent = 'Hablar con Mentemática';
+        }
+    }
+
     function clearChatHistory() {
         chatHistory = [];
+        latestHandoffUrl = '';
         localStorage.removeItem(HISTORY_STORAGE_KEY);
+        updateMentematicaContactButton();
 
         if (!chatMessages) {
             return;
@@ -133,9 +187,30 @@ import { Bot, X, ArrowUp, MessageCircle } from 'lucide-astro';
         text.className = isUser
             ? 'text-xs font-medium leading-relaxed text-white'
             : 'text-xs font-medium text-dark dark:text-white leading-relaxed';
-        text.textContent = message.content;
+        const handoffUrls = !isUser ? findHandoffUrls(message.content) : [];
+        const handoffUrl = handoffUrls[0] || '';
 
-        wrapper.append(role, text);
+        if (handoffUrl) {
+            const messageWithoutHandoffUrl = handoffUrls
+                .reduce((content, url) => content.replace(url, ''), message.content)
+                .trim();
+            text.textContent = messageWithoutHandoffUrl
+                ? `${messageWithoutHandoffUrl} Puedes continuar con Mentemática desde el botón.`
+                : 'Puedes continuar con Mentemática desde el botón.';
+
+            const handoffLink = document.createElement('a');
+            handoffLink.href = handoffUrl;
+            handoffLink.target = '_blank';
+            handoffLink.rel = 'noreferrer';
+            handoffLink.className = 'mt-3 inline-flex rounded-full bg-cyan-100 px-4 py-2 text-[11px] font-bold text-slate-900 shadow-sm transition hover:bg-mint-100 dark:bg-cyan-400 dark:text-slate-950';
+            handoffLink.textContent = 'Continuar con Mentemática';
+            wrapper.append(role, text, handoffLink);
+            updateMentematicaContactButton(handoffUrl);
+        } else {
+            text.textContent = message.content;
+            wrapper.append(role, text);
+        }
+
         chatMessages.append(wrapper);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
