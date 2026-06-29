@@ -30,6 +30,15 @@ export interface CreateMenteDentaSessionInput {
   prospect_phone?: string | null;
 }
 
+export interface UpdateMenteDentaSessionProspectInput {
+  prospect_name?: string;
+  prospect_email?: string;
+  prospect_phone?: string;
+  business_name?: string;
+  business_type?: string;
+  city?: string;
+}
+
 export async function createSession(
   input: CreateMenteDentaSessionInput,
 ): Promise<MenteDentaSession> {
@@ -78,6 +87,53 @@ export async function updateSessionLastSeen(sessionId: string): Promise<MenteDen
 
   if (error) {
     throw new Error(`Failed to update MenteDenta session last_seen_at: ${error.message}`);
+  }
+
+  return data as MenteDentaSession;
+}
+
+export async function updateSessionProspectData(
+  sessionId: string,
+  input: UpdateMenteDentaSessionProspectInput,
+): Promise<MenteDentaSession> {
+  const session = await getSessionById(sessionId);
+
+  if (!session) {
+    throw new Error('MenteDenta session not found');
+  }
+
+  const metadata = {
+    ...(session.metadata ?? {}),
+  };
+
+  if (input.business_name) {
+    metadata.business_name = input.business_name;
+  }
+
+  if (input.business_type) {
+    metadata.business_type = input.business_type;
+  }
+
+  if (input.city) {
+    metadata.city = input.city;
+  }
+
+  const updatePayload = {
+    prospect_name: input.prospect_name || session.prospect_name,
+    prospect_email: input.prospect_email || session.prospect_email,
+    prospect_phone: input.prospect_phone || session.prospect_phone,
+    metadata,
+  };
+
+  const { data, error } = await getMenteDentaSupabase()
+    .from('mentedenta_sessions')
+    .update(updatePayload)
+    .eq('id', sessionId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update MenteDenta session prospect data: ${error.message}`);
   }
 
   return data as MenteDentaSession;

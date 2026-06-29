@@ -16,6 +16,7 @@ const REQUIRED_ENV_NAMES = [
 
 let cachedEnv: MenteDentaEnv | undefined;
 let cachedInternalApiKey: string | undefined;
+let cachedMentematicaHandoffBaseUrl: string | undefined;
 
 function readRequiredEnv(name: (typeof REQUIRED_ENV_NAMES)[number]): string {
   const value = import.meta.env[name];
@@ -69,4 +70,31 @@ export function getMenteDentaInternalApiKey(): string {
 
   cachedInternalApiKey = value.trim();
   return cachedInternalApiKey;
+}
+
+export function getMentematicaHandoffBaseUrl(): string {
+  if (cachedMentematicaHandoffBaseUrl) {
+    return cachedMentematicaHandoffBaseUrl;
+  }
+
+  const value = import.meta.env.MENTEMATICA_HANDOFF_BASE_URL;
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error('Missing required server-side environment variable: MENTEMATICA_HANDOFF_BASE_URL');
+  }
+
+  const trimmedValue = value.trim();
+
+  try {
+    const url = new URL(trimmedValue);
+
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      throw new Error('unsupported protocol');
+    }
+  } catch {
+    throw new Error('Invalid URL in server-side environment variable: MENTEMATICA_HANDOFF_BASE_URL');
+  }
+
+  cachedMentematicaHandoffBaseUrl = trimmedValue;
+  return cachedMentematicaHandoffBaseUrl;
 }

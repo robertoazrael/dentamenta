@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 
+import { createHandoffAccessToken, type MenteDentaHandoffType } from '@/lib/mentedenta/accessTokens';
 import { recordEvent } from '@/lib/mentedenta/events';
 import { getRecentMessageHistory, saveMessage } from '@/lib/mentedenta/messages';
 import { callMenteDentaWebhook } from '@/lib/mentedenta/n8n';
@@ -13,6 +14,13 @@ interface MessageRequestBody {
   message?: unknown;
   scenario?: unknown;
   metadata?: unknown;
+}
+
+interface HandoffContext {
+  target: 'mentematica';
+  type: MenteDentaHandoffType;
+  url: string;
+  has_contact_on_file: boolean;
 }
 
 function jsonResponse(body: Record<string, unknown>, status: number): Response {
@@ -57,6 +65,7 @@ function buildWebhookMetadata(
   requestMetadata: Record<string, unknown>,
   session: MenteDentaSession,
   scenario: string,
+  handoff?: HandoffContext,
 ): Record<string, unknown> {
   const sessionMetadata = isRecord(session.metadata) ? session.metadata : {};
   const businessName = optionalString(sessionMetadata.business_name);
@@ -94,7 +103,144 @@ function buildWebhookMetadata(
       ...(demoType ? { type: demoType } : {}),
       ...(campaign ? { campaign } : {}),
     },
+    ...(handoff ? { handoff } : {}),
   };
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function getNormalizedTokens(value: string): string[] {
+  return normalizeText(value).split(' ').filter(Boolean);
+}
+
+function hasAnyPhrase(normalizedMessage: string, phrases: string[]): boolean {
+  return phrases.some((phrase) => normalizedMessage.includes(normalizeText(phrase)));
+}
+
+function hasAnyTokenPrefix(tokens: string[], prefixes: string[]): boolean {
+  return tokens.some((token) => prefixes.some((prefix) => token.startsWith(prefix)));
+}
+
+function hasMentematicaSalesIntent(message: string): boolean {
+  const normalizedMessage = normalizeText(message);
+  const tokens = getNormalizedTokens(message);
+
+  // Nombres/marca con tolerancia a errores frecuentes y menciones parciales seguras.
+  const mentionsMentematica = hasAnyTokenPrefix(tokens, ['mentematic']);
+  const mentionsRobertoOrMedina = tokens.includes('medina') || hasAnyTokenPrefix(tokens, ['rober']);
+
+  const mentionsAutomation = hasAnyTokenPrefix(tokens, ['automatiz']);
+  const mentionsChatbot = tokens.includes('chatbot') || hasAnyTokenPrefix(tokens, ['chatbot']);
+  const mentionsChat = tokens.includes('chat');
+  const mentionsSystemOrService = hasAnyTokenPrefix(tokens, ['sistem', 'servici', 'product']);
+  const mentionsBusiness = hasAnyTokenPrefix(tokens, ['negoci', 'empresa', 'consultori']);
+
+  const wantsContact = hasAnyPhrase(normalizedMessage, [
+    'hablar con alguien',
+    'hablar con rober',
+    'hablar con roberto',
+    'puedo hablar con alguien',
+    'puedo hablar con rober',
+    'puedo hablar con roberto',
+  ]);
+  const wantsToAcquire = hasAnyPhrase(normalizedMessage, [
+    'quiero comprar',
+    'quiero contratar',
+    'quiero cotizar',
+    'quiero adquirir',
+    'quiero uno como este',
+    'quiero una como esta',
+  ]) || hasAnyTokenPrefix(tokens, ['contrat', 'cotiz', 'compr', 'adquiir', 'adquir']);
+  const asksPrice = hasAnyTokenPrefix(tokens, ['preci', 'cost']) || hasAnyPhrase(normalizedMessage, [
+    'cuanto cuesta',
+    'cuanto vale',
+    'precio del sistema',
+    'precios del sistema',
+  ]);
+  const asksAboutThisChat = hasAnyPhrase(normalizedMessage, [
+    'opciones de este chat',
+    'este chat para mi negocio',
+    'servicio de chat',
+    'sistema de chat',
+  ]);
+
+  if (mentionsMentematica || mentionsRobertoOrMedina || mentionsAutomation) {
+    return true;
+  }
+
+  if (asksAboutThisChat) {
+    return true;
+  }
+
+  if (mentionsChatbot && (wantsContact || wantsToAcquire || asksPrice || mentionsBusiness)) {
+    return true;
+  }
+
+  if ((mentionsChat || mentionsSystemOrService) && (wantsContact || wantsToAcquire || asksPrice || mentionsBusiness)) {
+    return true;
+  }
+
+  if (wantsToAcquire && (mentionsBusiness || mentionsChat || mentionsChatbot || mentionsSystemOrService)) {
+    return true;
+  }
+
+  return false;
+}
+
+async function createHandoffContext(session: MenteDentaSession): Promise<HandoffContext | undefined> {
+  const hasContactOnFile = Boolean(session.prospect_email || session.prospect_phone);
+  const handoffType: MenteDentaHandoffType = hasContactOnFile ? 'identified' : 'anonymous';
+
+  try {
+    const handoff = await createHandoffAccessToken(session.id, handoffType, 'sales_interest');
+
+    try {
+      await recordEvent({
+        session_id: session.id,
+        event_name: 'mentematica_handoff_requested',
+        metadata: {
+          target: 'mentematica',
+          handoff_type: handoffType,
+          has_contact_on_file: hasContactOnFile,
+        },
+      });
+    } catch (eventError) {
+      console.error('Failed to record MenteDenta handoff requested event', eventError);
+    }
+
+    return {
+      target: 'mentematica',
+      type: handoff.handoff_type,
+      url: handoff.handoff_url,
+      has_contact_on_file: hasContactOnFile,
+    };
+  } catch (error) {
+    console.error('Failed to create MenteDenta handoff token', error);
+
+    try {
+      await recordEvent({
+        session_id: session.id,
+        event_name: 'mentematica_handoff_error',
+        metadata: {
+          target: 'mentematica',
+          handoff_type: handoffType,
+          has_contact_on_file: hasContactOnFile,
+        },
+      });
+    } catch (eventError) {
+      console.error('Failed to record MenteDenta handoff error event', eventError);
+    }
+
+    return undefined;
+  }
 }
 
 async function readJson(request: Request): Promise<MessageRequestBody> {
@@ -150,7 +296,10 @@ export const POST: APIRoute = async ({ request }) => {
       ...historyMessage,
       content: sanitizeMenteDentaText(historyMessage.content).content,
     }));
-    const webhookMetadata = buildWebhookMetadata(metadata, session, scenario);
+    const handoffContext = hasMentematicaSalesIntent(sanitizedUserMessage.content)
+      ? await createHandoffContext(session)
+      : undefined;
+    const webhookMetadata = buildWebhookMetadata(metadata, session, scenario, handoffContext);
 
     await saveMessage({
       session_id: sessionId,

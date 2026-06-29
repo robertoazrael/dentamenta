@@ -1,7 +1,9 @@
 import { getMenteDentaSupabase } from './supabase';
+import { getMentematicaHandoffBaseUrl } from './env';
 import { generatePanelToken, generatePanelUrl, hashPanelToken } from './tokens';
 
-export type MenteDentaAccessTokenPurpose = 'panel' | 'demo_entry';
+export type MenteDentaAccessTokenPurpose = 'panel' | 'demo_entry' | 'handoff';
+export type MenteDentaHandoffType = 'anonymous' | 'identified';
 
 export interface MenteDentaAccessToken {
   id: string;
@@ -29,9 +31,17 @@ export interface CreateDemoEntryAccessTokenResult {
   token: string;
 }
 
+export interface CreateHandoffAccessTokenResult {
+  accessToken: MenteDentaAccessToken;
+  token: string;
+  handoff_url: string;
+  handoff_type: MenteDentaHandoffType;
+}
+
 async function createAccessToken(
   sessionId: string,
   purpose: MenteDentaAccessTokenPurpose,
+  metadata: Record<string, unknown> = {},
 ): Promise<{ accessToken: MenteDentaAccessToken; token: string }> {
   const token = generatePanelToken();
   const tokenHash = hashPanelToken(token);
@@ -42,6 +52,7 @@ async function createAccessToken(
       session_id: sessionId,
       token_hash: tokenHash,
       purpose,
+      metadata,
     })
     .select('*')
     .single();
@@ -72,6 +83,35 @@ export async function createDemoEntryAccessToken(
   sessionId: string,
 ): Promise<CreateDemoEntryAccessTokenResult> {
   return createAccessToken(sessionId, 'demo_entry');
+}
+
+export function generateHandoffUrl(token: string, handoffType: MenteDentaHandoffType): string {
+  const baseUrl = new URL(getMentematicaHandoffBaseUrl());
+  const basePath = baseUrl.pathname.replace(/\/$/, '');
+  const targetPath = handoffType === 'identified' ? 'gracias' : 'contacto';
+
+  baseUrl.pathname = `${basePath}/${targetPath}`.replace(/\/{2,}/g, '/');
+  baseUrl.searchParams.set('handoff_token', token);
+  return baseUrl.toString();
+}
+
+export async function createHandoffAccessToken(
+  sessionId: string,
+  handoffType: MenteDentaHandoffType,
+  reason = 'sales_interest',
+): Promise<CreateHandoffAccessTokenResult> {
+  const { accessToken, token } = await createAccessToken(sessionId, 'handoff', {
+    target: 'mentematica',
+    handoff_type: handoffType,
+    reason,
+  });
+
+  return {
+    accessToken,
+    token,
+    handoff_url: generateHandoffUrl(token, handoffType),
+    handoff_type: handoffType,
+  };
 }
 
 export async function getValidAccessTokenByPlainToken(
