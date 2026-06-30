@@ -1,42 +1,49 @@
 ---
 import { ChevronDown } from 'lucide-astro';
+
+const faqs = [
+    {
+        question: '¿Dónde está ubicado Dentamenta?',
+        answer: 'Dentamenta es un consultorio ficticio para demo, ubicado de forma general en la zona norte de Mérida, cerca de Prolongación Montejo y Altabrisa. No usamos una dirección real exacta.',
+    },
+    {
+        question: '¿Qué horarios maneja el consultorio demo?',
+        answer: 'Lunes a viernes de 9:00 a.m. a 2:00 p.m. y de 4:00 p.m. a 8:00 p.m. Sábados de 9:00 a.m. a 2:00 p.m. Domingos cerrado.',
+    },
+    {
+        question: '¿Puedo agendar una cita desde el chat?',
+        answer: 'Sí, el chat puede simular una cita demo pidiendo sólo motivo de consulta y día u horario preferido. La confirmación final dependería del consultorio.',
+    },
+    {
+        question: '¿Atienden urgencias dentales?',
+        answer: 'El demo puede orientar ante dolor fuerte, inflamación, sangrado, fractura o golpe, y recomendar valoración dental lo antes posible. No promete atención inmediata ni servicio 24/7.',
+    },
+    {
+        question: '¿Los precios son definitivos?',
+        answer: 'No. Los precios visibles son aproximados para fines del demo y pueden cambiar después de una valoración profesional.',
+    },
+    {
+        question: '¿Dentamenta es una clínica real?',
+        answer: 'Dentamenta es una demostración comercial creada por Mentemática para mostrar cómo funcionaría un chatbot y panel para consultorios dentales.',
+    },
+];
 ---
 
 <section class="py-24 bg-white dark:bg-dark">
     <div class="max-w-3xl mx-auto px-6">
-        <h2 class="text-3xl font-extrabold text-center mb-12 text-dark dark:text-white">Dudas Comunes</h2>
+        <h2 class="text-3xl font-extrabold text-center mb-12 text-dark dark:text-white">Dudas comunes</h2>
         <div class="space-y-4">
-            <div class="border border-ice dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 overflow-hidden">
-                <button class="faq-btn w-full p-6 text-left flex justify-between items-center outline-none group">
-                    <span class="font-bold text-dark dark:text-white group-hover:text-mint-500 transition-colors">¿Aceptan seguros médicos?</span>
-                    <ChevronDown class="faq-icon transition-transform duration-300 dark:text-white" />
-                </button>
-                <div class="faq-content px-6 text-soft dark:text-mint-100/50">
-                    Sí, trabajamos con las principales aseguradoras y prepagas. También ofrecemos planes de financiación directa.
-                </div>
-            </div>
-            <div class="border border-ice dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 overflow-hidden">
-                <button class="faq-btn w-full p-6 text-left flex justify-between items-center outline-none group">
-                    <span class="font-bold text-dark dark:text-white group-hover:text-mint-500 transition-colors">¿Duele el blanqueamiento dental?</span>
-                    <ChevronDown class="faq-icon transition-transform duration-300 dark:text-white" />
-                </button>
-                <div class="faq-content px-6 text-soft dark:text-mint-100/50">
-                    Nuestras técnicas láser con geles desensibilizantes aseguran una experiencia libre de dolor en el 99% de los casos.
-                </div>
-            </div>
+            {faqs.map(({ question, answer }) => (
+                <details class="group border border-ice dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 overflow-hidden">
+                    <summary class="flex w-full cursor-pointer list-none items-center justify-between gap-4 p-6 text-left outline-none marker:hidden">
+                        <span class="font-bold text-dark dark:text-white group-hover:text-mint-500 transition-colors">{question}</span>
+                        <ChevronDown class="shrink-0 transition-transform duration-300 dark:text-white group-open:rotate-180" />
+                    </summary>
+                    <div class="px-6 text-soft dark:text-mint-100/50">
+                        <p class="pb-6">{answer}</p>
+                    </div>
+                </details>
+            ))}
         </div>
     </div>
 </section>
-
-<script>
-    document.querySelectorAll('.faq-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const content = btn.nextElementSibling;
-            const icon = btn.querySelector('.faq-icon');
-            if (content instanceof HTMLElement && icon instanceof HTMLElement) {
-                content.classList.toggle('active');
-                icon.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-            }
-        });
-    });
-</script>
