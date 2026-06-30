@@ -1,35 +1,81 @@
+---
+import { CalendarDays, Gift, Sparkles } from 'lucide-astro';
+import { birthdayPromotion, dentamentaPromotions } from '@/data/dentamentaPromotions';
+
+const fallbackCurrentPromotion = dentamentaPromotions[0];
+const fallbackNextPromotion = dentamentaPromotions[1];
+---
+
 <section id="ofertas" class="py-24 bg-white dark:bg-dark overflow-hidden">
     <div class="max-w-7xl mx-auto px-6 lg:px-10">
         <div class="text-center mb-16">
-            <span class="text-xs font-black uppercase tracking-[0.3em] text-accent">Beneficios Exclusivos</span>
-            <h2 class="text-4xl font-extrabold text-dark dark:text-white mt-4">Planes DentaMenta</h2>
+            <span class="text-xs font-black uppercase tracking-[0.3em] text-accent">Promociones mensuales</span>
+            <h2 class="text-4xl font-extrabold text-dark dark:text-white mt-4">Este mes en Dentamenta</h2>
+            <p class="max-w-2xl mx-auto mt-4 text-sm text-soft dark:text-mint-100/50">
+                Promociones de ejemplo para el demo. Cambian cada mes y están sujetas a disponibilidad y valoración.
+            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            <!-- Promo 1 -->
-            <div class="flex flex-col p-10 bg-ice dark:bg-slate-800 rounded-[3rem] border border-mint-100 dark:border-slate-700 h-full">
-                <div class="flex-grow">
-                    <h3 class="text-2xl font-black mb-4 dark:text-white">Cita Reembolsable</h3>
-                    <p class="text-soft dark:text-mint-100/50 text-sm mb-8 leading-relaxed">El costo de la primera evaluación se descuenta totalmente al iniciar tu tratamiento con nosotros.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 items-stretch">
+            <div class="flex flex-col justify-between p-10 bg-mint-500 text-white rounded-[3rem] shadow-xl shadow-mint-500/20 min-h-[320px]">
+                <div>
+                    <div class="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-[10px] font-black uppercase tracking-widest">
+                        <CalendarDays class="w-4 h-4" />
+                        <span id="current-promotion-month">{fallbackCurrentPromotion.monthName}</span>
+                    </div>
+                    <h3 id="current-promotion-title" class="mt-8 text-3xl lg:text-4xl font-black leading-tight">{fallbackCurrentPromotion.title}</h3>
+                    <p id="current-promotion-description" class="mt-5 max-w-2xl text-mint-50 leading-relaxed">{fallbackCurrentPromotion.description}</p>
                 </div>
-                <button class="w-full py-4 rounded-2xl bg-mint-500 text-white font-bold uppercase tracking-widest text-xs hover:bg-accent transition-all shadow-md">Ver Más</button>
+                <a href="#contacto" class="mt-10 inline-flex w-fit rounded-2xl bg-white px-6 py-4 text-xs font-bold uppercase tracking-widest text-mint-600 transition-all hover:bg-ice">
+                    Preguntar por la promo
+                </a>
             </div>
-            <!-- Promo 2 (Featured) -->
-            <div class="flex flex-col p-10 bg-mint-500 text-white rounded-[3rem] shadow-xl shadow-mint-500/20 h-full transform md:scale-105 z-10">
-                <div class="flex-grow">
-                    <h3 class="text-2xl font-black mb-4">Pack Bienvenida</h3>
-                    <p class="text-mint-100 text-sm mb-8 leading-relaxed">Limpieza Fresh sin costo con tu primer diagnóstico integral. Queremos que sientas la frescura desde el primer día.</p>
+
+            <div class="grid gap-8">
+                <div class="p-8 bg-ice dark:bg-slate-800 rounded-[2.5rem] border border-mint-100 dark:border-slate-700">
+                    <div class="w-12 h-12 bg-white dark:bg-dark text-mint-500 rounded-2xl flex items-center justify-center mb-5">
+                        <Sparkles class="w-6 h-6" />
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-accent">Próximo mes · <span id="next-promotion-month">{fallbackNextPromotion.monthName}</span></p>
+                    <h3 id="next-promotion-title" class="mt-3 text-xl font-black text-dark dark:text-white">{fallbackNextPromotion.title}</h3>
+                    <p id="next-promotion-description" class="mt-3 text-sm leading-relaxed text-soft dark:text-mint-100/50">{fallbackNextPromotion.description}</p>
                 </div>
-                <button class="w-full py-4 rounded-2xl bg-white text-mint-500 font-bold uppercase tracking-widest text-xs hover:bg-ice transition-all">Reclamar Ahora</button>
-            </div>
-            <!-- Promo 3 -->
-            <div class="flex flex-col p-10 bg-ice dark:bg-slate-800 rounded-[3rem] border border-mint-100 dark:border-slate-700 h-full">
-                <div class="flex-grow">
-                    <h3 class="text-2xl font-black mb-4 dark:text-white">Mes Cumpleaños</h3>
-                    <p class="text-soft dark:text-mint-100/50 text-sm mb-8 leading-relaxed">Recibe un 10% de descuento en cualquier tratamiento de estética dental durante tu mes especial.</p>
+
+                <div class="p-8 bg-ice dark:bg-slate-800 rounded-[2.5rem] border border-mint-100 dark:border-slate-700">
+                    <div class="w-12 h-12 bg-white dark:bg-dark text-mint-500 rounded-2xl flex items-center justify-center mb-5">
+                        <Gift class="w-6 h-6" />
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-accent">Extra demo</p>
+                    <h3 class="mt-3 text-xl font-black text-dark dark:text-white">{birthdayPromotion.title}</h3>
+                    <p class="mt-3 text-sm leading-relaxed text-soft dark:text-mint-100/50">{birthdayPromotion.description}</p>
                 </div>
-                <button class="w-full py-4 rounded-2xl border-2 border-mint-300 text-mint-500 font-bold uppercase tracking-widest text-xs hover:bg-mint-500 hover:text-white transition-all">Activar Cupón</button>
             </div>
         </div>
     </div>
 </section>
+
+<script define:vars={{ dentamentaPromotions }}>
+    const promotions = Array.isArray(dentamentaPromotions) ? dentamentaPromotions : [];
+    const currentMonthIndex = new Date().getMonth();
+    const currentPromotion = promotions[currentMonthIndex] || promotions[0];
+    const nextPromotion = promotions[(currentMonthIndex + 1) % 12] || promotions[1] || promotions[0];
+
+    function setText(id, value) {
+        const element = document.getElementById(id);
+        if (element && typeof value === 'string') {
+            element.textContent = value;
+        }
+    }
+
+    if (currentPromotion) {
+        setText('current-promotion-month', currentPromotion.monthName);
+        setText('current-promotion-title', currentPromotion.title);
+        setText('current-promotion-description', currentPromotion.description);
+    }
+
+    if (nextPromotion) {
+        setText('next-promotion-month', nextPromotion.monthName);
+        setText('next-promotion-title', nextPromotion.title);
+        setText('next-promotion-description', nextPromotion.description);
+    }
+</script>

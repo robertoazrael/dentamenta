@@ -1,42 +1,79 @@
 ---
-import { Smile, Layers, ShieldCheck, Activity } from 'lucide-astro';
+import { Baby, HeartPulse, Layers, ShieldCheck, Smile, Sparkles, Stethoscope, Waves } from 'lucide-astro';
+
+const services = [
+    {
+        icon: Stethoscope,
+        title: 'Valoración inicial',
+        description: 'Revisión general, orientación de tratamiento y presupuesto aproximado.',
+        price: '$350 MXN',
+    },
+    {
+        icon: Waves,
+        title: 'Limpieza dental',
+        description: 'Limpieza con ultrasonido, pulido y orientación preventiva.',
+        price: '$650 MXN',
+    },
+    {
+        icon: Smile,
+        title: 'Resinas',
+        description: 'Restauraciones estéticas para caries pequeñas o medianas, previa valoración.',
+        price: 'Desde $900 MXN',
+    },
+    {
+        icon: ShieldCheck,
+        title: 'Extracciones simples',
+        description: 'Extracciones no quirúrgicas, siempre sujetas a valoración profesional.',
+        price: 'Desde $1,200 MXN',
+    },
+    {
+        icon: Sparkles,
+        title: 'Blanqueamiento',
+        description: 'Tratamiento estético para aclarar el tono dental, sujeto a valoración.',
+        price: 'Desde $2,800 MXN',
+    },
+    {
+        icon: Baby,
+        title: 'Atención infantil',
+        description: 'Revisión preventiva, orientación para papás y tratamientos básicos no complejos.',
+        price: '$400 MXN',
+    },
+    {
+        icon: HeartPulse,
+        title: 'Urgencias dentales',
+        description: 'Orientación ante dolor, inflamación, fractura, sangrado, golpe o molestia intensa.',
+        price: 'Desde $500 MXN',
+    },
+    {
+        icon: Layers,
+        title: 'Orientación de ortodoncia',
+        description: 'Primera orientación y canalización a valoración. Sin prometer tiempos sin revisión.',
+        price: 'Según valoración',
+    },
+];
 ---
 
 <section id="servicios" class="py-24 bg-ice dark:bg-dark/50">
     <div class="max-w-7xl mx-auto px-6 lg:px-10">
         <div class="text-center mb-16">
-            <h2 class="text-3xl font-extrabold mb-4 text-dark dark:text-white">Especialidades con Sabor a Futuro</h2>
-            <div class="w-20 h-1.5 bg-mint-500 mx-auto rounded-full"></div>
+            <span class="text-xs font-black uppercase tracking-[0.3em] text-accent">Servicios demo</span>
+            <h2 class="text-3xl font-extrabold mt-4 mb-4 text-dark dark:text-white">Atención dental inicial y preventiva</h2>
+            <p class="max-w-2xl mx-auto text-sm text-soft dark:text-mint-100/50">
+                Precios aproximados para fines del demo. Los tratamientos pueden cambiar después de una valoración profesional.
+            </p>
+            <div class="w-20 h-1.5 bg-mint-500 mx-auto rounded-full mt-6"></div>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div class="group p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-mint-300 hover:-translate-y-2">
-                <div class="w-14 h-14 bg-mint-50 dark:bg-mint-900/20 text-mint-500 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-mint-500 group-hover:text-white transition-all">
-                    <Smile class="w-8 h-8" />
+            {services.map(({ icon: Icon, title, description, price }) => (
+                <div class="group p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-mint-300 hover:-translate-y-2">
+                    <div class="w-14 h-14 bg-mint-50 dark:bg-mint-900/20 text-mint-500 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-mint-500 group-hover:text-white transition-all">
+                        <Icon class="w-8 h-8" />
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-dark dark:text-white">{title}</h3>
+                    <p class="text-soft dark:text-mint-100/50 text-sm leading-relaxed">{description}</p>
+                    <p class="mt-5 text-xs font-black uppercase tracking-widest text-mint-500">{price}</p>
                 </div>
-                <h3 class="text-xl font-bold mb-3 text-dark dark:text-white">Estética Menta</h3>
-                <p class="text-soft dark:text-mint-100/50 text-sm leading-relaxed">Diseño de sonrisa con porcelana ultrafina para un look natural y vibrante.</p>
-            </div>
-            <div class="group p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-mint-300 hover:-translate-y-2">
-                <div class="w-14 h-14 bg-mint-50 dark:bg-mint-900/20 text-mint-500 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-mint-500 group-hover:text-white transition-all">
-                    <Layers class="w-8 h-8" />
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-dark dark:text-white">Ortodoncia Pro</h3>
-                <p class="text-soft dark:text-mint-100/50 text-sm leading-relaxed">Alineadores invisibles de alta tecnología para corregir tu sonrisa cómodamente.</p>
-            </div>
-            <div class="group p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-mint-300 hover:-translate-y-2">
-                <div class="w-14 h-14 bg-mint-50 dark:bg-mint-900/20 text-mint-500 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-mint-500 group-hover:text-white transition-all">
-                    <ShieldCheck class="w-8 h-8" />
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-dark dark:text-white">Bio-Implantes</h3>
-                <p class="text-soft dark:text-mint-100/50 text-sm leading-relaxed">Reposición de piezas con integración biológica perfecta y estética idéntica.</p>
-            </div>
-            <div class="group p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-mint-300 hover:-translate-y-2">
-                <div class="w-14 h-14 bg-mint-50 dark:bg-mint-900/20 text-mint-500 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-mint-500 group-hover:text-white transition-all">
-                    <Activity class="w-8 h-8" />
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-dark dark:text-white">Higiene Fresh</h3>
-                <p class="text-soft dark:text-mint-100/50 text-sm leading-relaxed">Limpiezas por ultrasonido con acabado pulido y sabor a menta glaciar.</p>
-            </div>
+            ))}
         </div>
     </div>
 </section>
